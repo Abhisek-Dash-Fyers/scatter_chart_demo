@@ -26,89 +26,23 @@ class StockData {
     return 'short_buildup'; // oiChange >= 0 && priceChange < 0
   }
 
-  // Get CSS gradient color based on quadrant and intensity
+  // Get CSS gradient color based on quadrant and intensity (simplified for Highcharts compatibility)
   String get gradientColor {
-    double intensity = priceChange.abs();
-
-    switch (quadrant) {
-      case 'long_buildup': // Upper right - Green gradients
-        if (intensity > 3.0) {
-          return 'radial-gradient(circle, #1B5E20 0%, #2E7D32 40%, #4CAF50 70%, #81C784 100%)';
-        } else if (intensity > 2.0) {
-          return 'radial-gradient(circle, #2E7D32 0%, #388E3C 40%, #66BB6A 70%, #A5D6A7 100%)';
-        } else if (intensity > 1.0) {
-          return 'radial-gradient(circle, #388E3C 0%, #4CAF50 40%, #81C784 70%, #C8E6C9 100%)';
-        } else {
-          return 'radial-gradient(circle, #4CAF50 0%, #66BB6A 40%, #A5D6A7 70%, #DCEDC8 100%)';
-        }
-
-      case 'long_unwinding': // Upper left - Light green gradients
-        if (intensity > 3.0) {
-          return 'radial-gradient(circle, #388E3C 0%, #4CAF50 40%, #81C784 70%, #C8E6C9 100%)';
-        } else if (intensity > 2.0) {
-          return 'radial-gradient(circle, #4CAF50 0%, #66BB6A 40%, #A5D6A7 70%, #DCEDC8 100%)';
-        } else if (intensity > 1.0) {
-          return 'radial-gradient(circle, #66BB6A 0%, #81C784 40%, #C8E6C9 70%, #E8F5E8 100%)';
-        } else {
-          return 'radial-gradient(circle, #81C784 0%, #A5D6A7 40%, #C8E6C9 70%, #F1F8E9 100%)';
-        }
-
-      case 'short_covering': // Lower left - Light red/orange gradients
-        if (intensity > 3.0) {
-          return 'radial-gradient(circle, #FF7043 0%, #FFAB91 40%, #FFCCBC 70%, #FFF3E0 100%)';
-        } else if (intensity > 2.0) {
-          return 'radial-gradient(circle, #FFAB91 0%, #FFCCBC 40%, #FFE0B2 70%, #FFF8E1 100%)';
-        } else if (intensity > 1.0) {
-          return 'radial-gradient(circle, #FFCCBC 0%, #FFE0B2 40%, #FFF3E0 70%, #FFFDE7 100%)';
-        } else {
-          return 'radial-gradient(circle, #FFE0B2 0%, #FFF3E0 40%, #FFF8E1 70%, #FFFDE7 100%)';
-        }
-
-      case 'short_buildup': // Lower right - Red/orange gradients
-        if (intensity > 3.0) {
-          return 'radial-gradient(circle, #B71C1C 0%, #D32F2F 40%, #F44336 70%, #FF7043 100%)';
-        } else if (intensity > 2.0) {
-          return 'radial-gradient(circle, #D32F2F 0%, #F44336 40%, #FF5722 70%, #FFAB91 100%)';
-        } else if (intensity > 1.0) {
-          return 'radial-gradient(circle, #F44336 0%, #FF5722 40%, #FF7043 70%, #FFCCBC 100%)';
-        } else {
-          return 'radial-gradient(circle, #FF5722 0%, #FF7043 40%, #FFAB91 70%, #FFE0B2 100%)';
-        }
-
-      default:
-        return '#9E9E9E';
-    }
+    // For now, return the primary color from each gradient as Highcharts may not support CSS gradients directly
+    return solidColor;
   }
 
-  // Get solid color fallback for better compatibility
+  // Get solid color based on quadrant only (ignoring intensity)
   String get solidColor {
-    double intensity = priceChange.abs();
-
     switch (quadrant) {
-      case 'long_buildup': // Upper right - Green shades
-        if (intensity > 3.0) return '#1B5E20';
-        if (intensity > 2.0) return '#2E7D32';
-        if (intensity > 1.0) return '#388E3C';
+      case 'long_buildup': // Upper right - Dark green
+        return '#1B5E20';
+      case 'long_unwinding': // Upper left - Light green
         return '#4CAF50';
-
-      case 'long_unwinding': // Upper left - Light green shades
-        if (intensity > 3.0) return '#388E3C';
-        if (intensity > 2.0) return '#4CAF50';
-        if (intensity > 1.0) return '#66BB6A';
-        return '#81C784';
-
-      case 'short_covering': // Lower left - Light red/orange shades
-        if (intensity > 3.0) return '#FF7043';
-        if (intensity > 2.0) return '#FFAB91';
-        if (intensity > 1.0) return '#FFCCBC';
-        return '#FFE0B2';
-
-      case 'short_buildup': // Lower right - Red/orange shades
-        if (intensity > 3.0) return '#B71C1C';
-        if (intensity > 2.0) return '#D32F2F';
-        if (intensity > 1.0) return '#F44336';
-        return '#FF5722';
-
+      case 'short_covering': // Lower left - Light orange
+        return '#FF7043';
+      case 'short_buildup': // Lower right - Dark red
+        return '#B71C1C';
       default:
         return '#9E9E9E';
     }
@@ -118,13 +52,13 @@ class StockData {
   String get hoverColor {
     switch (quadrant) {
       case 'long_buildup':
-        return '#66BB6A';
+        return '#4CAF50'; // Brighter green
       case 'long_unwinding':
-        return '#A5D6A7';
+        return '#81C784'; // Brighter light green
       case 'short_covering':
-        return '#FFCCBC';
+        return '#FFAB91'; // Brighter orange
       case 'short_buildup':
-        return '#FF7043';
+        return '#F44336'; // Brighter red
       default:
         return '#BDBDBD';
     }
@@ -133,6 +67,22 @@ class StockData {
   // Get bubble size based on market cap with better scaling
   double get bubbleSize {
     return (marketCap * 0.8).clamp(25.0, 45.0);
+  }
+
+  // Get simplified gradient for each quadrant (ignoring intensity)
+  String get quadrantGradient {
+    switch (quadrant) {
+      case 'long_buildup': // Upper right - Dark green gradient
+        return 'radial-gradient(circle, #1B5E20 0%, #2E7D32 40%, #4CAF50 70%, #81C784 100%)';
+      case 'long_unwinding': // Upper left - Light green gradient
+        return 'radial-gradient(circle, #4CAF50 0%, #66BB6A 40%, #81C784 70%, #C8E6C9 100%)';
+      case 'short_covering': // Lower left - Orange gradient
+        return 'radial-gradient(circle, #FF7043 0%, #FFAB91 40%, #FFCCBC 70%, #FFF3E0 100%)';
+      case 'short_buildup': // Lower right - Red gradient
+        return 'radial-gradient(circle, #B71C1C 0%, #D32F2F 40%, #F44336 70%, #FF7043 100%)';
+      default:
+        return 'radial-gradient(circle, #9E9E9E 0%, #E0E0E0 100%)';
+    }
   }
 }
 
@@ -260,30 +210,32 @@ class StockHeatmapChart extends StatelessWidget {
                         text: '% change in OI',
                         enabled: true,
                         style: HighchartsXAxisTitleStyleOptions(
-                          fontSize: '12px',
-                          color: '#666666',
+                          fontSize: '11px',
+                          color: '#888888',
                         ),
+                        margin: 15,
                       ),
                       min: -50,
                       max: 50,
                       tickInterval: 10,
-                      lineWidth: 2,
-                      lineColor: '#333333',
+                      lineWidth: 1,
+                      lineColor: '#d0d0d0',
                       gridLineWidth: 1,
-                      gridLineColor: '#e6e6e6',
+                      gridLineColor: '#f0f0f0',
                       plotLines: [
                         HighchartsXAxisPlotLinesOptions(
                           value: 0,
-                          color: '#333333',
-                          width: 2,
+                          color: '#666666',
+                          width: 1,
                           zIndex: 3,
                         ),
                       ],
                       labels: HighchartsXAxisLabelsOptions(
                         style: HighchartsXAxisLabelsStyleOptions(
-                          fontSize: '11px',
-                          color: '#666666',
+                          fontSize: '10px',
+                          color: '#999999',
                         ),
+                        format: '{value}%',
                       ),
                     ),
                   ],
@@ -293,59 +245,56 @@ class StockHeatmapChart extends StatelessWidget {
                       title: HighchartsYAxisTitleOptions(
                         text: '% change in price',
                         style: HighchartsXAxisTitleStyleOptions(
-                          fontSize: '12px',
-                          color: '#666666',
+                          fontSize: '11px',
+                          color: '#888888',
                         ),
+                        margin: 15,
                       ),
                       min: -4,
                       max: 4,
                       tickInterval: 1,
-                      lineWidth: 2,
-                      lineColor: '#333333',
+                      lineWidth: 1,
+                      lineColor: '#d0d0d0',
                       gridLineWidth: 1,
-                      gridLineColor: '#e6e6e6',
+                      gridLineColor: '#f0f0f0',
                       plotLines: [
                         HighchartsYAxisPlotLinesOptions(
                           value: 0,
-                          color: '#333333',
-                          width: 2,
+                          color: '#666666',
+                          width: 1,
                           zIndex: 3,
                         ),
                       ],
                       labels: HighchartsYAxisLabelsOptions(
                         style: HighchartsXAxisLabelsStyleOptions(
-                          fontSize: '11px',
-                          color: '#666666',
+                          fontSize: '10px',
+                          color: '#999999',
                         ),
+                        format: '{value}%',
                       ),
                     ),
                   ],
 
                   plotOptions: HighchartsPlotOptions(
                     bubble: HighchartsBubbleSeriesOptions(
-                      minSize: 25,
-                      maxSize: 45,
+                      minSize: 80,
+                      maxSize: 80,
                       sizeBy: 'area',
                       zMin: 30,
                       zMax: 60,
                       displayNegative: true,
                       sizeByAbsoluteValue: false,
-                      opacity: 0.8,
+                      opacity: 0.9,
                       dataLabels: HighchartsBubbleSeriesDataLabelsOptions(
                         enabled: true,
-                        format: '{point.name}',
+                        useHTML: true,
+                        format:
+                            '<div style="text-align: center; color: white; font-weight: bold;"><div style="width: 16px; height: 16px; background: rgba(255,255,255,0.9); border-radius: 50%; margin: 0 auto 2px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #333;">📊</div><div style="font-size: 9px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">{point.name}</div></div>',
                         style: {
-                          'fontSize': '10px',
+                          'fontSize': '9px',
                           'fontWeight': 'bold',
                           'color': '#ffffff',
-                          'textOutline': '2px contrast',
-                        },
-                        shadow: {
-                          'color': 'rgba(0,0,0,0.3)',
-                          'offsetX': 1,
-                          'offsetY': 1,
-                          'opacity': 0.5,
-                          'width': 2,
+                          'textOutline': 'none',
                         },
                       ),
                       tooltip: HighchartsBubbleSeriesTooltipOptions(
@@ -379,9 +328,11 @@ class StockHeatmapChart extends StatelessWidget {
                               y: stock.priceChange,
                               z: stock.marketCap,
                               name: stock.symbol,
-                              color: stock.solidColor,
+                              color:
+                                  stock.solidColor, // Use solid color for base
                               marker: HighchartsBubbleSeriesDataMarkerOptions(
-                                fillColor: stock.solidColor,
+                                fillColor: stock
+                                    .solidColor, // Use solid color for marker
                                 lineColor: '#ffffff',
                                 lineWidth: 2,
                                 states: HighchartsSeriesMarkerStatesOptions(
