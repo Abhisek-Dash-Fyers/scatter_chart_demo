@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "scatter_chart_demo_web",
+            "cwd": "/Users/em1053/Desktop/demo_projects/scatter_chart_demo",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug",
+            "deviceId": "chrome",
+            "args": [
+                "--web-port=8000",
+                "--web-enable-expression-evaluation",
+                "--web-browser-flag",
+                "--disable-web-security",
+                // "--web-hostname=10.26.6.91"
+            ]
+        }
+    ]
+}
