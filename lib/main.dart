@@ -18,26 +18,51 @@ class StockData {
     required this.marketCap,
   });
 
-  // Get color based on price change intensity
+  // Get color with gradient effect based on price change intensity
   String get pointColor {
     if (priceChange >= 0) {
-      // Green shades for positive changes
-      if (priceChange > 2.5) return '#2E7D32';
-      if (priceChange > 1.5) return '#388E3C';
-      if (priceChange > 0.5) return '#4CAF50';
-      return '#66BB6A';
+      // Green gradients for positive changes
+      if (priceChange > 3.0) {
+        return 'radial-gradient(circle, #1B5E20 0%, #2E7D32 50%, #4CAF50 100%)';
+      } else if (priceChange > 2.0) {
+        return 'radial-gradient(circle, #2E7D32 0%, #388E3C 50%, #66BB6A 100%)';
+      } else if (priceChange > 1.0) {
+        return 'radial-gradient(circle, #388E3C 0%, #4CAF50 50%, #81C784 100%)';
+      } else {
+        return 'radial-gradient(circle, #4CAF50 0%, #66BB6A 50%, #A5D6A7 100%)';
+      }
     } else {
-      // Red/Orange shades for negative changes
-      if (priceChange < -2.5) return '#D32F2F';
-      if (priceChange < -1.5) return '#F44336';
-      if (priceChange < -0.5) return '#FF5722';
-      return '#FF7043';
+      // Red/Orange gradients for negative changes
+      if (priceChange < -3.0) {
+        return 'radial-gradient(circle, #B71C1C 0%, #D32F2F 50%, #F44336 100%)';
+      } else if (priceChange < -2.0) {
+        return 'radial-gradient(circle, #D32F2F 0%, #F44336 50%, #EF5350 100%)';
+      } else if (priceChange < -1.0) {
+        return 'radial-gradient(circle, #F44336 0%, #FF5722 50%, #FF7043 100%)';
+      } else {
+        return 'radial-gradient(circle, #FF5722 0%, #FF7043 50%, #FFAB91 100%)';
+      }
     }
   }
 
-  // Get bubble radius based on market cap
-  double get bubbleRadius {
-    return (marketCap / 2).clamp(15.0, 35.0);
+  // Get solid color fallback for better compatibility
+  String get solidColor {
+    if (priceChange >= 0) {
+      if (priceChange > 3.0) return '#1B5E20';
+      if (priceChange > 2.0) return '#2E7D32';
+      if (priceChange > 1.0) return '#388E3C';
+      return '#4CAF50';
+    } else {
+      if (priceChange < -3.0) return '#B71C1C';
+      if (priceChange < -2.0) return '#D32F2F';
+      if (priceChange < -1.0) return '#F44336';
+      return '#FF5722';
+    }
+  }
+
+  // Get bubble size based on market cap
+  double get bubbleSize {
+    return (marketCap / 1.5).clamp(20.0, 40.0);
   }
 }
 
@@ -51,20 +76,29 @@ class StockHeatmapChart extends StatelessWidget {
     StockData(symbol: 'PAYTM', oiChange: -35, priceChange: 2.1, marketCap: 40),
     StockData(symbol: 'ABB', oiChange: -25, priceChange: 1.8, marketCap: 42),
     StockData(symbol: 'PAYTM', oiChange: -15, priceChange: 1.2, marketCap: 38),
+    StockData(symbol: 'ABB', oiChange: -10, priceChange: 0.8, marketCap: 35),
 
     // Upper right quadrant (Long buildup - positive OI, positive price)
-    StockData(symbol: 'TORRENT', oiChange: 45, priceChange: 1.9, marketCap: 55),
+    StockData(symbol: 'TORRENT', oiChange: 45, priceChange: 3.5, marketCap: 55),
     StockData(symbol: 'ABB', oiChange: 35, priceChange: 2.6, marketCap: 48),
     StockData(symbol: 'ABB', oiChange: 25, priceChange: 2.2, marketCap: 46),
     StockData(symbol: 'HIMAT', oiChange: 15, priceChange: 1.8, marketCap: 40),
     StockData(symbol: 'AIA', oiChange: 20, priceChange: 1.4, marketCap: 42),
     StockData(symbol: 'ABB', oiChange: 40, priceChange: 1.1, marketCap: 44),
+    StockData(symbol: 'ABB', oiChange: 30, priceChange: 0.9, marketCap: 41),
 
     // Lower left quadrant (Short covering - negative OI, negative price)
     StockData(symbol: 'AIA', oiChange: -45, priceChange: -1.2, marketCap: 38),
     StockData(symbol: 'HIMAT', oiChange: -35, priceChange: -1.8, marketCap: 40),
     StockData(symbol: 'ABB', oiChange: -25, priceChange: -2.8, marketCap: 45),
     StockData(symbol: 'HIMAT', oiChange: -15, priceChange: -2.2, marketCap: 42),
+    StockData(symbol: 'L&T', oiChange: -10, priceChange: -1.5, marketCap: 39),
+    StockData(
+      symbol: 'TORRENT',
+      oiChange: -20,
+      priceChange: -2.9,
+      marketCap: 43,
+    ),
 
     // Lower right quadrant (Short buildup - positive OI, negative price)
     StockData(symbol: 'HIMAT', oiChange: 15, priceChange: -1.1, marketCap: 38),
@@ -84,6 +118,7 @@ class StockHeatmapChart extends StatelessWidget {
       marketCap: 46,
     ),
     StockData(symbol: 'ABB', oiChange: 40, priceChange: -1.5, marketCap: 44),
+    StockData(symbol: 'ABB', oiChange: 50, priceChange: -3.2, marketCap: 47),
   ];
 
   @override
@@ -119,7 +154,7 @@ class StockHeatmapChart extends StatelessWidget {
               child: HighchartsChart(
                 HighchartsOptions(
                   chart: HighchartsChartOptions(
-                    type: 'scatter',
+                    type: 'bubble',
                     backgroundColor: '#ffffff',
                     plotBackgroundColor: '#ffffff',
                     height: 500,
@@ -133,6 +168,10 @@ class StockHeatmapChart extends StatelessWidget {
                       title: HighchartsXAxisTitleOptions(
                         text: '% change in OI',
                         enabled: true,
+                        style: HighchartsXAxisTitleStyleOptions(
+                          fontSize: '12px',
+                          color: '#666666',
+                        ),
                       ),
                       min: -50,
                       max: 50,
@@ -156,6 +195,10 @@ class StockHeatmapChart extends StatelessWidget {
                     HighchartsYAxisOptions(
                       title: HighchartsYAxisTitleOptions(
                         text: '% change in price',
+                        style: HighchartsXAxisTitleStyleOptions(
+                          fontSize: '12px',
+                          color: '#666666',
+                        ),
                       ),
                       min: -4,
                       max: 4,
@@ -176,34 +219,43 @@ class StockHeatmapChart extends StatelessWidget {
                   ],
 
                   plotOptions: HighchartsPlotOptions(
-                    scatter: HighchartsScatterSeriesOptions(
-                      marker: HighchartsScatterSeriesMarkerOptions(
-                        symbol: 'circle',
-                        radius: 25,
-                        lineWidth: 2,
-                        lineColor: '#ffffff',
-                        states: HighchartsSeriesMarkerStatesOptions(
-                          hover: HighchartsSeriesMarkerStatesHoverOptions(
-                            enabled: true,
-                            radiusPlus: 5,
-                          ),
-                        ),
+                    bubble: HighchartsBubbleSeriesOptions(
+                      minSize: 20,
+                      maxSize: 40,
+                      dataLabels: HighchartsBubbleSeriesDataLabelsOptions(
+                        enabled: true,
+                        format: '{point.name}',
+                        style: {
+                          'fontSize': '10px',
+                          'fontWeight': 'bold',
+                          'color': '#ffffff',
+                          'textOutline': '1px contrast',
+                        },
                       ),
-                      dataLabels: [
-                        HighchartsSeriesDataLabelsOptions(
-                          enabled: true,
-                          format: '{point.name}',
-                        ),
-                      ],
-                      tooltip: HighchartsScatterSeriesTooltipOptions(
+                      tooltip: HighchartsBubbleSeriesTooltipOptions(
                         pointFormat:
-                            '{point.name}<br/>OI Change: {point.x}%<br/>Price Change: {point.y}%',
+                            '{point.name}<br/>OI Change: {point.x}%<br/>Price Change: {point.y}%<br/>Market Cap: {point.z}',
                       ),
                     ),
                   ),
 
-                  // Create multiple series for different colors
-                  series: _createColoredSeries(),
+                  series: [
+                    HighchartsBubbleSeries(
+                      name: 'Stocks',
+                      dataPoints: stockData
+                          .map(
+                            (stock) => HighchartsBubbleSeriesDataOptions(
+                              x: stock.oiChange,
+                              y: stock.priceChange,
+                              z: stock.marketCap,
+                              name: stock.symbol,
+                              color: stock
+                                  .solidColor, // Using solid color for better compatibility
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -226,46 +278,5 @@ class StockHeatmapChart extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  // Create separate series for different colors to achieve individual point coloring
-  List<HighchartsScatterSeries> _createColoredSeries() {
-    // Group stocks by color
-    Map<String, List<StockData>> colorGroups = {};
-
-    for (var stock in stockData) {
-      String color = stock.pointColor;
-      if (!colorGroups.containsKey(color)) {
-        colorGroups[color] = [];
-      }
-      colorGroups[color]!.add(stock);
-    }
-
-    // Create a series for each color group
-    List<HighchartsScatterSeries> series = [];
-    int seriesIndex = 0;
-
-    colorGroups.forEach((color, stocks) {
-      series.add(
-        HighchartsScatterSeries(
-          name: 'Group${seriesIndex++}',
-          data: stocks
-              .map((stock) => [stock.oiChange, stock.priceChange])
-              .toList(),
-          options: HighchartsScatterSeriesOptions(
-            color: color,
-            marker: HighchartsScatterSeriesMarkerOptions(
-              symbol: 'circle',
-              radius: 25,
-              lineWidth: 2,
-              lineColor: '#ffffff',
-              fillColor: color,
-            ),
-          ),
-        ),
-      );
-    });
-
-    return series;
   }
 }
