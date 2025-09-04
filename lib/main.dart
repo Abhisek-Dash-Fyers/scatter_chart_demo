@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:highcharts_flutter/highcharts.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 void main() {
   runApp(MaterialApp(home: StockHeatmapChart()));
@@ -26,127 +26,74 @@ class StockData {
     return 'short_buildup'; // oiChange >= 0 && priceChange < 0
   }
 
-  // Get CSS gradient color based on quadrant and intensity
-  String get gradientColor {
-    double intensity = priceChange.abs();
-
+  // Get gradient colors for each quadrant
+  List<Color> get gradientColors {
     switch (quadrant) {
-      case 'long_buildup': // Upper right - Green gradients
-        if (intensity > 3.0) {
-          return 'radial-gradient(circle, #1B5E20 0%, #2E7D32 40%, #4CAF50 70%, #81C784 100%)';
-        } else if (intensity > 2.0) {
-          return 'radial-gradient(circle, #2E7D32 0%, #388E3C 40%, #66BB6A 70%, #A5D6A7 100%)';
-        } else if (intensity > 1.0) {
-          return 'radial-gradient(circle, #388E3C 0%, #4CAF50 40%, #81C784 70%, #C8E6C9 100%)';
-        } else {
-          return 'radial-gradient(circle, #4CAF50 0%, #66BB6A 40%, #A5D6A7 70%, #DCEDC8 100%)';
-        }
-
-      case 'long_unwinding': // Upper left - Light green gradients
-        if (intensity > 3.0) {
-          return 'radial-gradient(circle, #388E3C 0%, #4CAF50 40%, #81C784 70%, #C8E6C9 100%)';
-        } else if (intensity > 2.0) {
-          return 'radial-gradient(circle, #4CAF50 0%, #66BB6A 40%, #A5D6A7 70%, #DCEDC8 100%)';
-        } else if (intensity > 1.0) {
-          return 'radial-gradient(circle, #66BB6A 0%, #81C784 40%, #C8E6C9 70%, #E8F5E8 100%)';
-        } else {
-          return 'radial-gradient(circle, #81C784 0%, #A5D6A7 40%, #C8E6C9 70%, #F1F8E9 100%)';
-        }
-
-      case 'short_covering': // Lower left - Light red/orange gradients
-        if (intensity > 3.0) {
-          return 'radial-gradient(circle, #FF7043 0%, #FFAB91 40%, #FFCCBC 70%, #FFF3E0 100%)';
-        } else if (intensity > 2.0) {
-          return 'radial-gradient(circle, #FFAB91 0%, #FFCCBC 40%, #FFE0B2 70%, #FFF8E1 100%)';
-        } else if (intensity > 1.0) {
-          return 'radial-gradient(circle, #FFCCBC 0%, #FFE0B2 40%, #FFF3E0 70%, #FFFDE7 100%)';
-        } else {
-          return 'radial-gradient(circle, #FFE0B2 0%, #FFF3E0 40%, #FFF8E1 70%, #FFFDE7 100%)';
-        }
-
-      case 'short_buildup': // Lower right - Red/orange gradients
-        if (intensity > 3.0) {
-          return 'radial-gradient(circle, #B71C1C 0%, #D32F2F 40%, #F44336 70%, #FF7043 100%)';
-        } else if (intensity > 2.0) {
-          return 'radial-gradient(circle, #D32F2F 0%, #F44336 40%, #FF5722 70%, #FFAB91 100%)';
-        } else if (intensity > 1.0) {
-          return 'radial-gradient(circle, #F44336 0%, #FF5722 40%, #FF7043 70%, #FFCCBC 100%)';
-        } else {
-          return 'radial-gradient(circle, #FF5722 0%, #FF7043 40%, #FFAB91 70%, #FFE0B2 100%)';
-        }
-
+      case 'long_buildup': // Upper right - Dark green gradient
+        return [
+          Color(0xFF1B5E20),
+          Color(0xFF2E7D32),
+          Color(0xFF4CAF50),
+          Color(0xFF81C784),
+        ];
+      case 'long_unwinding': // Upper left - Light green gradient
+        return [
+          Color(0xFF4CAF50),
+          Color(0xFF66BB6A),
+          Color(0xFF81C784),
+          Color(0xFFC8E6C9),
+        ];
+      case 'short_covering': // Lower left - Orange gradient
+        return [
+          Color(0xFFFF7043),
+          Color(0xFFFFAB91),
+          Color(0xFFFFCCBC),
+          Color(0xFFFFF3E0),
+        ];
+      case 'short_buildup': // Lower right - Red gradient
+        return [
+          Color(0xFFB71C1C),
+          Color(0xFFD32F2F),
+          Color(0xFFF44336),
+          Color(0xFFFF7043),
+        ];
       default:
-        return '#9E9E9E';
+        return [Color(0xFF9E9E9E), Color(0xFFE0E0E0)];
     }
   }
 
-  // Get solid color fallback for better compatibility
-  String get solidColor {
-    double intensity = priceChange.abs();
-
-    switch (quadrant) {
-      case 'long_buildup': // Upper right - Green shades
-        if (intensity > 3.0) return '#1B5E20';
-        if (intensity > 2.0) return '#2E7D32';
-        if (intensity > 1.0) return '#388E3C';
-        return '#4CAF50';
-
-      case 'long_unwinding': // Upper left - Light green shades
-        if (intensity > 3.0) return '#388E3C';
-        if (intensity > 2.0) return '#4CAF50';
-        if (intensity > 1.0) return '#66BB6A';
-        return '#81C784';
-
-      case 'short_covering': // Lower left - Light red/orange shades
-        if (intensity > 3.0) return '#FF7043';
-        if (intensity > 2.0) return '#FFAB91';
-        if (intensity > 1.0) return '#FFCCBC';
-        return '#FFE0B2';
-
-      case 'short_buildup': // Lower right - Red/orange shades
-        if (intensity > 3.0) return '#B71C1C';
-        if (intensity > 2.0) return '#D32F2F';
-        if (intensity > 1.0) return '#F44336';
-        return '#FF5722';
-
-      default:
-        return '#9E9E9E';
-    }
-  }
-
-  // Get hover color (slightly brighter)
-  String get hoverColor {
+  // Get solid color for fallback
+  Color get quadrantColor {
     switch (quadrant) {
       case 'long_buildup':
-        return '#66BB6A';
+        return Color(0xFF1B5E20);
       case 'long_unwinding':
-        return '#A5D6A7';
+        return Color(0xFF4CAF50);
       case 'short_covering':
-        return '#FFCCBC';
+        return Color(0xFFFF7043);
       case 'short_buildup':
-        return '#FF7043';
+        return Color(0xFFB71C1C);
       default:
-        return '#BDBDBD';
+        return Color(0xFF9E9E9E);
     }
-  }
-
-  // Get bubble size based on market cap with better scaling
-  double get bubbleSize {
-    return (marketCap * 0.8).clamp(25.0, 45.0);
   }
 }
 
-class StockHeatmapChart extends StatelessWidget {
+class StockHeatmapChart extends StatefulWidget {
   StockHeatmapChart({super.key});
 
+  @override
+  State<StockHeatmapChart> createState() => _StockHeatmapChartState();
+}
+
+class _StockHeatmapChartState extends State<StockHeatmapChart> {
   final List<StockData> stockData = [
     // Upper left quadrant (Long unwinding - negative OI, positive price)
     StockData(symbol: 'UNION', oiChange: -40, priceChange: 3.2, marketCap: 50),
     StockData(symbol: 'ABB', oiChange: -30, priceChange: 2.8, marketCap: 45),
     StockData(symbol: 'PAYTM', oiChange: -35, priceChange: 2.1, marketCap: 40),
-    StockData(symbol: 'ABB', oiChange: -25, priceChange: 1.8, marketCap: 42),
-    StockData(symbol: 'PAYTM', oiChange: -15, priceChange: 1.2, marketCap: 38),
-    StockData(symbol: 'ABB', oiChange: -10, priceChange: 0.8, marketCap: 35),
+    StockData(symbol: 'PAYTM', oiChange: -25, priceChange: 1.8, marketCap: 42),
+    StockData(symbol: 'ABB', oiChange: -15, priceChange: 1.2, marketCap: 38),
 
     // Upper right quadrant (Long buildup - positive OI, positive price)
     StockData(symbol: 'TORRENT', oiChange: 45, priceChange: 3.5, marketCap: 55),
@@ -154,8 +101,6 @@ class StockHeatmapChart extends StatelessWidget {
     StockData(symbol: 'ABB', oiChange: 25, priceChange: 2.2, marketCap: 46),
     StockData(symbol: 'HIMAT', oiChange: 15, priceChange: 1.8, marketCap: 40),
     StockData(symbol: 'AIA', oiChange: 20, priceChange: 1.4, marketCap: 42),
-    StockData(symbol: 'ABB', oiChange: 40, priceChange: 1.1, marketCap: 44),
-    StockData(symbol: 'ABB', oiChange: 30, priceChange: 0.9, marketCap: 41),
 
     // Lower left quadrant (Short covering - negative OI, negative price)
     StockData(symbol: 'AIA', oiChange: -45, priceChange: -1.2, marketCap: 38),
@@ -163,12 +108,6 @@ class StockHeatmapChart extends StatelessWidget {
     StockData(symbol: 'ABB', oiChange: -25, priceChange: -2.8, marketCap: 45),
     StockData(symbol: 'HIMAT', oiChange: -15, priceChange: -2.2, marketCap: 42),
     StockData(symbol: 'L&T', oiChange: -10, priceChange: -1.5, marketCap: 39),
-    StockData(
-      symbol: 'TORRENT',
-      oiChange: -20,
-      priceChange: -2.9,
-      marketCap: 43,
-    ),
 
     // Lower right quadrant (Short buildup - positive OI, negative price)
     StockData(symbol: 'HIMAT', oiChange: 15, priceChange: -1.1, marketCap: 38),
@@ -181,14 +120,6 @@ class StockHeatmapChart extends StatelessWidget {
     ),
     StockData(symbol: 'AIA', oiChange: 45, priceChange: -2.9, marketCap: 42),
     StockData(symbol: 'ABB', oiChange: 20, priceChange: -1.8, marketCap: 40),
-    StockData(
-      symbol: 'TORRENT',
-      oiChange: 10,
-      priceChange: -2.8,
-      marketCap: 46,
-    ),
-    StockData(symbol: 'ABB', oiChange: 40, priceChange: -1.5, marketCap: 44),
-    StockData(symbol: 'ABB', oiChange: 50, priceChange: -3.2, marketCap: 47),
   ];
 
   @override
@@ -240,227 +171,201 @@ class StockHeatmapChart extends StatelessWidget {
               ],
             ),
             SizedBox(height: 16),
-            // Main chart with integrated quadrant labels
+            // Main chart with fl_chart
             Expanded(
-              child: HighchartsChart(
-                HighchartsOptions(
-                  chart: HighchartsChartOptions(
-                    type: 'bubble',
-                    backgroundColor: '#ffffff',
-                    plotBackgroundColor: '#ffffff',
-                    height: 500,
-                  ),
-                  title: HighchartsTitleOptions(text: ''),
-                  legend: HighchartsLegendOptions(enabled: false),
-                  credits: HighchartsCreditsOptions(enabled: false),
-
-                  xAxis: [
-                    HighchartsXAxisOptions(
-                      title: HighchartsXAxisTitleOptions(
-                        text: '% change in OI',
-                        enabled: true,
-                        style: HighchartsXAxisTitleStyleOptions(
-                          fontSize: '12px',
-                          color: '#666666',
-                        ),
-                      ),
-                      min: -50,
-                      max: 50,
-                      tickInterval: 10,
-                      lineWidth: 2,
-                      lineColor: '#333333',
-                      gridLineWidth: 1,
-                      gridLineColor: '#e6e6e6',
-                      plotLines: [
-                        HighchartsXAxisPlotLinesOptions(
-                          value: 0,
-                          color: '#333333',
-                          width: 2,
-                          zIndex: 3,
-                        ),
-                      ],
-                      labels: HighchartsXAxisLabelsOptions(
-                        style: HighchartsXAxisLabelsStyleOptions(
-                          fontSize: '11px',
-                          color: '#666666',
-                        ),
-                      ),
-                    ),
-                  ],
-
-                  yAxis: [
-                    HighchartsYAxisOptions(
-                      title: HighchartsYAxisTitleOptions(
-                        text: '% change in price',
-                        style: HighchartsXAxisTitleStyleOptions(
-                          fontSize: '12px',
-                          color: '#666666',
-                        ),
-                      ),
-                      min: -4,
-                      max: 4,
-                      tickInterval: 1,
-                      lineWidth: 2,
-                      lineColor: '#333333',
-                      gridLineWidth: 1,
-                      gridLineColor: '#e6e6e6',
-                      plotLines: [
-                        HighchartsYAxisPlotLinesOptions(
-                          value: 0,
-                          color: '#333333',
-                          width: 2,
-                          zIndex: 3,
-                        ),
-                      ],
-                      labels: HighchartsYAxisLabelsOptions(
-                        style: HighchartsXAxisLabelsStyleOptions(
-                          fontSize: '11px',
-                          color: '#666666',
-                        ),
-                      ),
-                    ),
-                  ],
-
-                  plotOptions: HighchartsPlotOptions(
-                    bubble: HighchartsBubbleSeriesOptions(
-                      minSize: 25,
-                      maxSize: 45,
-                      sizeBy: 'area',
-                      zMin: 30,
-                      zMax: 60,
-                      displayNegative: true,
-                      sizeByAbsoluteValue: false,
-                      opacity: 0.8,
-                      dataLabels: HighchartsBubbleSeriesDataLabelsOptions(
-                        enabled: true,
-                        format: '{point.name}',
-                        style: {
-                          'fontSize': '10px',
-                          'fontWeight': 'bold',
-                          'color': '#ffffff',
-                          'textOutline': '2px contrast',
+              child: Stack(
+                children: [
+                  // Main scatter chart
+                  ScatterChart(
+                    ScatterChartData(
+                      minX: -50,
+                      maxX: 50,
+                      minY: -4,
+                      maxY: 4,
+                      backgroundColor: Colors.white,
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: true,
+                        drawHorizontalLine: true,
+                        verticalInterval: 10,
+                        horizontalInterval: 1,
+                        getDrawingVerticalLine: (value) {
+                          return FlLine(
+                            color: value == 0
+                                ? Colors.black
+                                : Colors.grey.shade300,
+                            strokeWidth: value == 0 ? 2 : 1,
+                          );
                         },
-                        shadow: {
-                          'color': 'rgba(0,0,0,0.3)',
-                          'offsetX': 1,
-                          'offsetY': 1,
-                          'opacity': 0.5,
-                          'width': 2,
+                        getDrawingHorizontalLine: (value) {
+                          return FlLine(
+                            color: value == 0
+                                ? Colors.black
+                                : Colors.grey.shade300,
+                            strokeWidth: value == 0 ? 2 : 1,
+                          );
                         },
                       ),
-                      tooltip: HighchartsBubbleSeriesTooltipOptions(
-                        pointFormat:
-                            '<b>{point.name}</b><br/>OI Change: {point.x}%<br/>Price Change: {point.y}%<br/>Market Cap: {point.z}',
+                      borderData: FlBorderData(
+                        show: true,
+                        border: Border.all(color: Colors.grey.shade400),
                       ),
-                      marker: HighchartsBubbleSeriesMarkerOptions(
-                        lineWidth: 2,
-                        lineColor: '#ffffff',
-                        fillOpacity: 0.8,
-                        states: HighchartsBubbleSeriesMarkerStatesOptions(
-                          hover: HighchartsBubbleSeriesMarkerStatesHoverOptions(
-                            enabled: true,
-                            radiusPlus: 5,
-                            lineWidthPlus: 1,
-                            fillColor: null,
+                      titlesData: FlTitlesData(
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            interval: 1,
+                            reservedSize: 40,
+                            getTitlesWidget: (value, meta) {
+                              return Padding(
+                                padding: EdgeInsets.only(right: 8),
+                                child: Text(
+                                  '${value.toInt()}%',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  series: [
-                    // Main stock data series
-                    HighchartsBubbleSeries(
-                      name: 'Stocks',
-                      dataPoints: stockData
-                          .map(
-                            (stock) => HighchartsBubbleSeriesDataOptions(
-                              x: stock.oiChange,
-                              y: stock.priceChange,
-                              z: stock.marketCap,
-                              name: stock.symbol,
-                              color: stock.solidColor,
-                              marker: HighchartsBubbleSeriesDataMarkerOptions(
-                                fillColor: stock.solidColor,
-                                lineColor: '#ffffff',
-                                lineWidth: 2,
-                                states: HighchartsSeriesMarkerStatesOptions(
-                                  hover:
-                                      HighchartsSeriesMarkerStatesHoverOptions(
-                                        fillColor: stock.hoverColor,
-                                        lineColor: '#ffffff',
-                                        lineWidth: 3,
-                                        radiusPlus: 5,
-                                      ),
+                          axisNameWidget: Padding(
+                            padding: EdgeInsets.only(right: 10),
+                            child: Transform.rotate(
+                              angle: -1.5708, // -90 degrees in radians
+                              child: Text(
+                                '% change in price',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
                                 ),
                               ),
                             ),
-                          )
-                          .toList(),
-                    ),
-
-                    // Quadrant labels series (using scatter with invisible markers)
-                    HighchartsScatterSeries(
-                      name: 'Quadrant Labels',
-                      options: HighchartsScatterSeriesOptions(
-                        enableMouseTracking:
-                            false, // Disable mouse interactions
-                        showInLegend: false, // Hide from legend
-                        allowPointSelect: false, // Disable point selection
-                        marker: HighchartsScatterSeriesMarkerOptions(
-                          enabled: false, // Hide markers completely
-                          radius: 0,
-                          fillColor: 'transparent',
-                          lineColor: 'transparent',
-                        ),
-                        dataLabels: [
-                          HighchartsSeriesDataLabelsOptions(
-                            enabled: true,
-                            format: '{point.name}',
-                            style: {
-                              'fontSize': '13px',
-                              'fontWeight': '500',
-                              'color': '#666666',
-                              'textOutline': 'none',
-                              'cursor': 'default',
-                            },
-                            useHTML: false,
-                            allowOverlap: true,
                           ),
-                        ],
-                        tooltip: HighchartsScatterSeriesTooltipOptions(
-                          pointFormat: '', // Empty tooltip content
+                          axisNameSize: 25,
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            interval: 10,
+                            reservedSize: 30,
+                            getTitlesWidget: (value, meta) {
+                              return Padding(
+                                padding: EdgeInsets.only(top: 8),
+                                child: Text(
+                                  '${value.toInt()}%',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          axisNameWidget: Padding(
+                            padding: EdgeInsets.only(top: 10),
+                            child: Text(
+                              '% change in OI',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          axisNameSize: 25,
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
                         ),
                       ),
-                      dataPoints: [
-                        // Upper left quadrant - Long unwinding (positioned more towards corner)
-                        HighchartsScatterSeriesDataOptions(
-                          x: -40,
-                          y: 3.5,
-                          name: 'Long unwinding',
+                      scatterSpots: stockData
+                          .map(
+                            (stock) => ScatterSpot(
+                              stock.oiChange,
+                              stock.priceChange,
+                              dotPainter: GradientBubblePainter(stock),
+                            ),
+                          )
+                          .toList(),
+                      scatterTouchData: ScatterTouchData(
+                        enabled: true,
+                        touchTooltipData: ScatterTouchTooltipData(
+                          getTooltipItems: (ScatterSpot touchedSpot) {
+                            final stock = stockData.firstWhere(
+                              (s) =>
+                                  s.oiChange == touchedSpot.x &&
+                                  s.priceChange == touchedSpot.y,
+                            );
+                            return ScatterTooltipItem(
+                              '${stock.symbol}\nOI: ${stock.oiChange}%\nPrice: ${stock.priceChange}%',
+                              textStyle: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
                         ),
-                        // Upper right quadrant - Long buildup (positioned more towards corner)
-                        HighchartsScatterSeriesDataOptions(
-                          x: 40,
-                          y: 3.5,
-                          name: 'Long buildup',
-                        ),
-                        // Lower left quadrant - Short covering (positioned more towards corner)
-                        HighchartsScatterSeriesDataOptions(
-                          x: -40,
-                          y: -3.5,
-                          name: 'Short covering',
-                        ),
-                        // Lower right quadrant - Short buildup (positioned more towards corner)
-                        HighchartsScatterSeriesDataOptions(
-                          x: 40,
-                          y: -3.5,
-                          name: 'Short buildup',
-                        ),
-                      ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Quadrant labels
+                  Positioned(
+                    left: 50,
+                    top: 50,
+                    child: Text(
+                      'Short covering',
+                      style: TextStyle(
+                        color: Colors.blue.shade600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 50,
+                    top: 50,
+                    child: Text(
+                      'Long buildup',
+                      style: TextStyle(
+                        color: Colors.blue.shade600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 50,
+                    bottom: 100,
+                    child: Text(
+                      'Long unwinding',
+                      style: TextStyle(
+                        color: Colors.blue.shade600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 50,
+                    bottom: 100,
+                    child: Text(
+                      'Short buildup',
+                      style: TextStyle(
+                        color: Colors.blue.shade600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -527,4 +432,92 @@ class StockHeatmapChart extends StatelessWidget {
       ),
     );
   }
+}
+
+// Custom dot painter for gradient bubbles with images and text
+class GradientBubblePainter extends FlDotPainter {
+  final StockData stock;
+
+  GradientBubblePainter(this.stock);
+
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
+    // Draw gradient bubble
+    final paint = Paint()
+      ..shader = RadialGradient(
+        colors: stock.gradientColors,
+        stops: [0.0, 0.4, 0.7, 1.0],
+        center: Alignment.topLeft,
+      ).createShader(Rect.fromCircle(center: offsetInCanvas, radius: 40));
+
+    // Draw bubble circle
+    canvas.drawCircle(offsetInCanvas, 40, paint);
+
+    // Draw white border
+    final borderPaint = Paint()
+      ..color = Colors.white.withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawCircle(offsetInCanvas, 40, borderPaint);
+
+    // Draw image placeholder (white circle)
+    final imagePaint = Paint()..color = Colors.white.withOpacity(0.9);
+    canvas.drawCircle(
+      Offset(offsetInCanvas.dx, offsetInCanvas.dy - 8),
+      8,
+      imagePaint,
+    );
+
+    // Draw business icon in the white circle
+    final iconPainter = TextPainter(
+      text: TextSpan(text: '📊', style: TextStyle(fontSize: 8)),
+      textDirection: TextDirection.ltr,
+    );
+    iconPainter.layout();
+    iconPainter.paint(
+      canvas,
+      Offset(offsetInCanvas.dx - iconPainter.width / 2, offsetInCanvas.dy - 12),
+    );
+
+    // Draw text (stock symbol)
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: stock.symbol,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          shadows: [
+            Shadow(
+              color: Colors.black.withOpacity(0.8),
+              offset: Offset(1, 1),
+              blurRadius: 2,
+            ),
+          ],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(offsetInCanvas.dx - textPainter.width / 2, offsetInCanvas.dy + 12),
+    );
+  }
+
+  @override
+  Size getSize(FlSpot spot) {
+    return Size(80, 80); // Fixed bubble size
+  }
+
+  @override
+  Color get mainColor => stock.gradientColors.first;
+
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) {
+    return this; // Simple implementation
+  }
+
+  @override
+  List<Object?> get props => [stock.symbol, stock.oiChange, stock.priceChange];
 }
