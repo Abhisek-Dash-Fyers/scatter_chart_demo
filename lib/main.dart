@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'dart:ui' as ui;
 
 void main() {
   runApp(MaterialApp(home: StockHeatmapChart()));
@@ -10,12 +11,14 @@ class StockData {
   final double oiChange; // x-axis
   final double priceChange; // y-axis
   final double marketCap; // for bubble radius
+  final String imageUrl; // URL for company logo
 
   StockData({
     required this.symbol,
     required this.oiChange,
     required this.priceChange,
     required this.marketCap,
+    required this.imageUrl,
   });
 
   // Get quadrant based on position
@@ -89,37 +92,152 @@ class StockHeatmapChart extends StatefulWidget {
 class _StockHeatmapChartState extends State<StockHeatmapChart> {
   final List<StockData> stockData = [
     // Upper left quadrant (Long unwinding - negative OI, positive price)
-    StockData(symbol: 'UNION', oiChange: -40, priceChange: 3.2, marketCap: 50),
-    StockData(symbol: 'ABB', oiChange: -30, priceChange: 2.8, marketCap: 45),
-    StockData(symbol: 'PAYTM', oiChange: -35, priceChange: 2.1, marketCap: 40),
-    StockData(symbol: 'PAYTM', oiChange: -25, priceChange: 1.8, marketCap: 42),
-    StockData(symbol: 'ABB', oiChange: -15, priceChange: 1.2, marketCap: 38),
+    StockData(
+      symbol: 'UNION',
+      oiChange: -40,
+      priceChange: 3.2,
+      marketCap: 50,
+      imageUrl: 'https://logo.clearbit.com/unionbank.com',
+    ),
+    StockData(
+      symbol: 'ABB',
+      oiChange: -30,
+      priceChange: 2.8,
+      marketCap: 45,
+      imageUrl: 'https://logo.clearbit.com/abb.com',
+    ),
+    StockData(
+      symbol: 'PAYTM',
+      oiChange: -35,
+      priceChange: 2.1,
+      marketCap: 40,
+      imageUrl: 'https://logo.clearbit.com/paytm.com',
+    ),
+    StockData(
+      symbol: 'PAYTM',
+      oiChange: -25,
+      priceChange: 1.8,
+      marketCap: 42,
+      imageUrl: 'https://logo.clearbit.com/paytm.com',
+    ),
+    StockData(
+      symbol: 'ABB',
+      oiChange: -15,
+      priceChange: 1.2,
+      marketCap: 38,
+      imageUrl: 'https://logo.clearbit.com/abb.com',
+    ),
 
     // Upper right quadrant (Long buildup - positive OI, positive price)
-    StockData(symbol: 'TORRENT', oiChange: 45, priceChange: 3.5, marketCap: 55),
-    StockData(symbol: 'ABB', oiChange: 35, priceChange: 2.6, marketCap: 48),
-    StockData(symbol: 'ABB', oiChange: 25, priceChange: 2.2, marketCap: 46),
-    StockData(symbol: 'HIMAT', oiChange: 15, priceChange: 1.8, marketCap: 40),
-    StockData(symbol: 'AIA', oiChange: 20, priceChange: 1.4, marketCap: 42),
+    StockData(
+      symbol: 'TORRENT',
+      oiChange: 45,
+      priceChange: 3.5,
+      marketCap: 55,
+      imageUrl: 'https://logo.clearbit.com/torrentpower.com',
+    ),
+    StockData(
+      symbol: 'ABB',
+      oiChange: 35,
+      priceChange: 2.6,
+      marketCap: 48,
+      imageUrl: 'https://logo.clearbit.com/abb.com',
+    ),
+    StockData(
+      symbol: 'ABB',
+      oiChange: 25,
+      priceChange: 2.2,
+      marketCap: 46,
+      imageUrl: 'https://logo.clearbit.com/abb.com',
+    ),
+    StockData(
+      symbol: 'HIMAT',
+      oiChange: 15,
+      priceChange: 1.8,
+      marketCap: 40,
+      imageUrl: 'https://logo.clearbit.com/himatsyngka.com',
+    ),
+    StockData(
+      symbol: 'AIA',
+      oiChange: 20,
+      priceChange: 1.4,
+      marketCap: 42,
+      imageUrl: 'https://logo.clearbit.com/aia.com',
+    ),
 
     // Lower left quadrant (Short covering - negative OI, negative price)
-    StockData(symbol: 'AIA', oiChange: -45, priceChange: -1.2, marketCap: 38),
-    StockData(symbol: 'HIMAT', oiChange: -35, priceChange: -1.8, marketCap: 40),
-    StockData(symbol: 'ABB', oiChange: -25, priceChange: -2.8, marketCap: 45),
-    StockData(symbol: 'HIMAT', oiChange: -15, priceChange: -2.2, marketCap: 42),
-    StockData(symbol: 'L&T', oiChange: -10, priceChange: -1.5, marketCap: 39),
+    StockData(
+      symbol: 'AIA',
+      oiChange: -45,
+      priceChange: -1.2,
+      marketCap: 38,
+      imageUrl: 'https://logo.clearbit.com/aia.com',
+    ),
+    StockData(
+      symbol: 'HIMAT',
+      oiChange: -35,
+      priceChange: -1.8,
+      marketCap: 40,
+      imageUrl: 'https://logo.clearbit.com/himatsyngka.com',
+    ),
+    StockData(
+      symbol: 'ABB',
+      oiChange: -25,
+      priceChange: -2.8,
+      marketCap: 45,
+      imageUrl: 'https://logo.clearbit.com/abb.com',
+    ),
+    StockData(
+      symbol: 'HIMAT',
+      oiChange: -15,
+      priceChange: -2.2,
+      marketCap: 42,
+      imageUrl: 'https://logo.clearbit.com/himatsyngka.com',
+    ),
+    StockData(
+      symbol: 'L&T',
+      oiChange: -10,
+      priceChange: -1.5,
+      marketCap: 39,
+      imageUrl: 'https://logo.clearbit.com/larsentoubro.com',
+    ),
 
     // Lower right quadrant (Short buildup - positive OI, negative price)
-    StockData(symbol: 'HIMAT', oiChange: 15, priceChange: -1.1, marketCap: 38),
-    StockData(symbol: 'ABB', oiChange: 25, priceChange: -2.1, marketCap: 44),
+    StockData(
+      symbol: 'HIMAT',
+      oiChange: 15,
+      priceChange: -1.1,
+      marketCap: 38,
+      imageUrl: 'https://logo.clearbit.com/himatsyngka.com',
+    ),
+    StockData(
+      symbol: 'ABB',
+      oiChange: 25,
+      priceChange: -2.1,
+      marketCap: 44,
+      imageUrl: 'https://logo.clearbit.com/abb.com',
+    ),
     StockData(
       symbol: 'TORRENT',
       oiChange: 35,
       priceChange: -2.6,
       marketCap: 48,
+      imageUrl: 'https://logo.clearbit.com/torrentpower.com',
     ),
-    StockData(symbol: 'AIA', oiChange: 45, priceChange: -2.9, marketCap: 42),
-    StockData(symbol: 'ABB', oiChange: 20, priceChange: -1.8, marketCap: 40),
+    StockData(
+      symbol: 'AIA',
+      oiChange: 45,
+      priceChange: -2.9,
+      marketCap: 42,
+      imageUrl: 'https://logo.clearbit.com/aia.com',
+    ),
+    StockData(
+      symbol: 'ABB',
+      oiChange: 20,
+      priceChange: -1.8,
+      marketCap: 40,
+      imageUrl: 'https://logo.clearbit.com/abb.com',
+    ),
   ];
 
   @override
@@ -192,23 +310,22 @@ class _StockHeatmapChartState extends State<StockHeatmapChart> {
                         getDrawingVerticalLine: (value) {
                           return FlLine(
                             color: value == 0
-                                ? Colors.black
-                                : Colors.grey.shade300,
-                            strokeWidth: value == 0 ? 2 : 1,
+                                ? Colors.black87
+                                : Colors.transparent,
+                            strokeWidth: value == 0 ? 1.5 : 0,
                           );
                         },
                         getDrawingHorizontalLine: (value) {
                           return FlLine(
                             color: value == 0
-                                ? Colors.black
-                                : Colors.grey.shade300,
-                            strokeWidth: value == 0 ? 2 : 1,
+                                ? Colors.black87
+                                : Colors.transparent,
+                            strokeWidth: value == 0 ? 1.5 : 0,
                           );
                         },
                       ),
                       borderData: FlBorderData(
-                        show: true,
-                        border: Border.all(color: Colors.grey.shade400),
+                        show: false, // No border as per design
                       ),
                       titlesData: FlTitlesData(
                         leftTitles: AxisTitles(
@@ -231,14 +348,14 @@ class _StockHeatmapChartState extends State<StockHeatmapChart> {
                             },
                           ),
                           axisNameWidget: Padding(
-                            padding: EdgeInsets.only(right: 10),
+                            padding: EdgeInsets.only(right: 15),
                             child: Transform.rotate(
                               angle: -1.5708, // -90 degrees in radians
                               child: Text(
                                 '% change in price',
                                 style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -266,12 +383,12 @@ class _StockHeatmapChartState extends State<StockHeatmapChart> {
                             },
                           ),
                           axisNameWidget: Padding(
-                            padding: EdgeInsets.only(top: 10),
+                            padding: EdgeInsets.only(top: 15),
                             child: Text(
                               '% change in OI',
                               style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -437,8 +554,26 @@ class _StockHeatmapChartState extends State<StockHeatmapChart> {
 // Custom dot painter for gradient bubbles with images and text
 class GradientBubblePainter extends FlDotPainter {
   final StockData stock;
+  ui.Image? _image;
 
-  GradientBubblePainter(this.stock);
+  GradientBubblePainter(this.stock) {
+    _loadImage();
+  }
+
+  // Load image from URL
+  void _loadImage() async {
+    try {
+      final NetworkImage networkImage = NetworkImage(stock.imageUrl);
+      final ImageStream stream = networkImage.resolve(ImageConfiguration.empty);
+      stream.addListener(
+        ImageStreamListener((ImageInfo info, bool _) {
+          _image = info.image;
+        }),
+      );
+    } catch (e) {
+      // If image loading fails, _image remains null and we'll use fallback
+    }
+  }
 
   @override
   void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
@@ -453,45 +588,89 @@ class GradientBubblePainter extends FlDotPainter {
     // Draw bubble circle
     canvas.drawCircle(offsetInCanvas, 40, paint);
 
-    // Draw white border
+    // Draw subtle white border
     final borderPaint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+      ..color = Colors.white.withOpacity(0.4)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 1.5;
     canvas.drawCircle(offsetInCanvas, 40, borderPaint);
 
-    // Draw image placeholder (white circle)
-    final imagePaint = Paint()..color = Colors.white.withOpacity(0.9);
+    // Draw image container (white circle with subtle border)
+    final imagePaint = Paint()..color = Colors.white.withOpacity(0.95);
     canvas.drawCircle(
-      Offset(offsetInCanvas.dx, offsetInCanvas.dy - 8),
-      8,
+      Offset(offsetInCanvas.dx, offsetInCanvas.dy - 6),
+      10,
       imagePaint,
     );
 
-    // Draw business icon in the white circle
-    final iconPainter = TextPainter(
-      text: TextSpan(text: '📊', style: TextStyle(fontSize: 8)),
-      textDirection: TextDirection.ltr,
-    );
-    iconPainter.layout();
-    iconPainter.paint(
-      canvas,
-      Offset(offsetInCanvas.dx - iconPainter.width / 2, offsetInCanvas.dy - 12),
+    // Draw image border
+    final imageBorderPaint = Paint()
+      ..color = Colors.grey.shade300
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5;
+    canvas.drawCircle(
+      Offset(offsetInCanvas.dx, offsetInCanvas.dy - 6),
+      10,
+      imageBorderPaint,
     );
 
-    // Draw text (stock symbol)
+    // Draw company logo (actual image or fallback)
+    if (_image != null) {
+      // Draw actual loaded image
+      final imageRect = Rect.fromCenter(
+        center: Offset(offsetInCanvas.dx, offsetInCanvas.dy - 6),
+        width: 16,
+        height: 16,
+      );
+      canvas.drawImageRect(
+        _image!,
+        Rect.fromLTWH(
+          0,
+          0,
+          _image!.width.toDouble(),
+          _image!.height.toDouble(),
+        ),
+        imageRect,
+        Paint(),
+      );
+    } else {
+      // Fallback: Draw company initials
+      final logoPainter = TextPainter(
+        text: TextSpan(
+          text: stock.symbol.length >= 2
+              ? stock.symbol.substring(0, 2)
+              : stock.symbol,
+          style: TextStyle(
+            fontSize: 7,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      logoPainter.layout();
+      logoPainter.paint(
+        canvas,
+        Offset(
+          offsetInCanvas.dx - logoPainter.width / 2,
+          offsetInCanvas.dy - 10,
+        ),
+      );
+    }
+
+    // Draw text (stock symbol) below image
     final textPainter = TextPainter(
       text: TextSpan(
         text: stock.symbol,
         style: TextStyle(
           color: Colors.white,
-          fontSize: 9,
-          fontWeight: FontWeight.bold,
+          fontSize: 8,
+          fontWeight: FontWeight.w600,
           shadows: [
             Shadow(
-              color: Colors.black.withOpacity(0.8),
-              offset: Offset(1, 1),
-              blurRadius: 2,
+              color: Colors.black.withOpacity(0.7),
+              offset: Offset(0.5, 0.5),
+              blurRadius: 1,
             ),
           ],
         ),
@@ -501,7 +680,7 @@ class GradientBubblePainter extends FlDotPainter {
     textPainter.layout();
     textPainter.paint(
       canvas,
-      Offset(offsetInCanvas.dx - textPainter.width / 2, offsetInCanvas.dy + 12),
+      Offset(offsetInCanvas.dx - textPainter.width / 2, offsetInCanvas.dy + 15),
     );
   }
 
