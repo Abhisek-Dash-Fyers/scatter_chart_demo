@@ -14,6 +14,7 @@ class StockData {
   final double priceChange; // y-axis
   final double marketCap; // for bubble radius
   final String imageUrl; // URL for company logo
+  final double currentPrice; // Current stock price
 
   StockData({
     required this.symbol,
@@ -21,6 +22,7 @@ class StockData {
     required this.priceChange,
     required this.marketCap,
     required this.imageUrl,
+    required this.currentPrice,
   });
 
   // Get quadrant based on position
@@ -201,6 +203,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 3.2,
       marketCap: 50,
       imageUrl: 'https://logo.clearbit.com/unionbank.com',
+      currentPrice: 125.45,
     ),
     StockData(
       symbol: 'ABB',
@@ -208,6 +211,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 2.8,
       marketCap: 45,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
     StockData(
       symbol: 'PAYTM',
@@ -215,6 +219,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 2.1,
       marketCap: 40,
       imageUrl: 'https://logo.clearbit.com/paytm.com',
+      currentPrice: 900.95,
     ),
     StockData(
       symbol: 'ABB',
@@ -222,6 +227,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 1.8,
       marketCap: 42,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
     StockData(
       symbol: 'PAYTM',
@@ -229,6 +235,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 1.2,
       marketCap: 38,
       imageUrl: 'https://logo.clearbit.com/paytm.com',
+      currentPrice: 900.95,
     ),
     StockData(
       symbol: 'ABB',
@@ -236,6 +243,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 0.8,
       marketCap: 35,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
 
     // Upper right quadrant (Long buildup - positive OI, positive price)
@@ -245,6 +253,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 3.5,
       marketCap: 55,
       imageUrl: 'https://logo.clearbit.com/torrentpower.com',
+      currentPrice: 1450.75,
     ),
     StockData(
       symbol: 'ABB',
@@ -252,6 +261,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 2.6,
       marketCap: 48,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
     StockData(
       symbol: 'ABB',
@@ -259,6 +269,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 2.2,
       marketCap: 46,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
     StockData(
       symbol: 'HIMAT',
@@ -266,6 +277,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 1.8,
       marketCap: 40,
       imageUrl: 'https://logo.clearbit.com/himatsyngka.com',
+      currentPrice: 320.85,
     ),
     StockData(
       symbol: 'AIA',
@@ -273,6 +285,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 1.4,
       marketCap: 42,
       imageUrl: 'https://logo.clearbit.com/aia.com',
+      currentPrice: 85.60,
     ),
     StockData(
       symbol: 'ABB',
@@ -280,6 +293,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 1.1,
       marketCap: 44,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
     StockData(
       symbol: 'ABB',
@@ -287,6 +301,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: 0.9,
       marketCap: 41,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
 
     // Lower left quadrant (Short covering - negative OI, negative price)
@@ -296,6 +311,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -1.2,
       marketCap: 38,
       imageUrl: 'https://logo.clearbit.com/aia.com',
+      currentPrice: 85.60,
     ),
     StockData(
       symbol: 'HIMAT',
@@ -303,6 +319,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -1.8,
       marketCap: 40,
       imageUrl: 'https://logo.clearbit.com/himatsyngka.com',
+      currentPrice: 320.85,
     ),
     StockData(
       symbol: 'ABB',
@@ -310,6 +327,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -2.8,
       marketCap: 45,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
     StockData(
       symbol: 'HIMAT',
@@ -317,6 +335,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -2.2,
       marketCap: 42,
       imageUrl: 'https://logo.clearbit.com/himatsyngka.com',
+      currentPrice: 320.85,
     ),
     StockData(
       symbol: 'L&T',
@@ -324,6 +343,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -1.5,
       marketCap: 39,
       imageUrl: 'https://logo.clearbit.com/larsentoubro.com',
+      currentPrice: 3650.25,
     ),
     StockData(
       symbol: 'TORRENT',
@@ -331,6 +351,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -2.9,
       marketCap: 43,
       imageUrl: 'https://logo.clearbit.com/torrentpower.com',
+      currentPrice: 1450.75,
     ),
 
     // Lower right quadrant (Short buildup - positive OI, negative price)
@@ -340,6 +361,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -1.1,
       marketCap: 38,
       imageUrl: 'https://logo.clearbit.com/himatsyngka.com',
+      currentPrice: 320.85,
     ),
     StockData(
       symbol: 'ABB',
@@ -347,6 +369,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -2.1,
       marketCap: 44,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
     StockData(
       symbol: 'TORRENT',
@@ -354,6 +377,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -2.6,
       marketCap: 48,
       imageUrl: 'https://logo.clearbit.com/torrentpower.com',
+      currentPrice: 1450.75,
     ),
     StockData(
       symbol: 'AIA',
@@ -361,6 +385,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -2.9,
       marketCap: 42,
       imageUrl: 'https://logo.clearbit.com/aia.com',
+      currentPrice: 85.60,
     ),
     StockData(
       symbol: 'ABB',
@@ -368,6 +393,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -1.8,
       marketCap: 40,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
     StockData(
       symbol: 'TORRENT',
@@ -375,6 +401,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -2.8,
       marketCap: 46,
       imageUrl: 'https://logo.clearbit.com/torrentpower.com',
+      currentPrice: 1450.75,
     ),
     StockData(
       symbol: 'ABB',
@@ -382,6 +409,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -1.5,
       marketCap: 44,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
     StockData(
       symbol: 'ABB',
@@ -389,6 +417,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       priceChange: -3.2,
       marketCap: 47,
       imageUrl: 'https://logo.clearbit.com/abb.com',
+      currentPrice: 4250.30,
     ),
   ];
 
