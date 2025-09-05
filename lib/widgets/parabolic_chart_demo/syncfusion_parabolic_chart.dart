@@ -49,27 +49,37 @@ class CustomParabolicColumnSegment<T, D> extends ColumnSegment<T, D> {
     // Create angled clipping path
     Path clipPath = Path();
 
-    // Create angled cut at the top following parabolic curve direction
-    double leftCutY = cutOffY;
-    double rightCutY = cutOffY;
+    // Create smooth parabolic cut by calculating neighboring points
+    double barWidth = rect.outerRect.width;
+    double leftX = rect.outerRect.left;
+    double rightX = rect.outerRect.right;
 
-    // Calculate angle based on position relative to max pain and neighboring points
-    double angleOffset = 5.0; // Pixels for angle
+    // Get parabolic values for neighboring points to create smooth curve
+    double leftNeighborX = xValue - 25; // Previous strike price
+    double rightNeighborX = xValue + 25; // Next strike price
 
-    if (xValue < maxPain) {
-      // Left side of max pain - angle slopes down to the right
-      rightCutY = cutOffY + angleOffset;
-    } else if (xValue > maxPain) {
-      // Right side of max pain - angle slopes down to the left
-      leftCutY = cutOffY + angleOffset;
-    }
-    // At max pain, keep it flat (no angle)
+    double leftNeighborY = _getParabolicValueAtX(leftNeighborX);
+    double rightNeighborY = _getParabolicValueAtX(rightNeighborX);
 
-    // Create the clipping path with angled top
-    clipPath.moveTo(rect.outerRect.left, rect.outerRect.bottom);
-    clipPath.lineTo(rect.outerRect.left, leftCutY);
-    clipPath.lineTo(rect.outerRect.right, rightCutY);
-    clipPath.lineTo(rect.outerRect.right, rect.outerRect.bottom);
+    // Calculate cut heights for smooth curve transition
+    double leftCutRatio = leftNeighborY / yValue;
+    double rightCutRatio = rightNeighborY / yValue;
+    if (leftCutRatio > 1.0) leftCutRatio = 1.0;
+    if (rightCutRatio > 1.0) rightCutRatio = 1.0;
+
+    double leftCutY = rect.outerRect.bottom - (barHeight * leftCutRatio);
+    double rightCutY = rect.outerRect.bottom - (barHeight * rightCutRatio);
+
+    // Create smooth curved top using quadratic bezier
+    clipPath.moveTo(leftX, rect.outerRect.bottom);
+    clipPath.lineTo(leftX, leftCutY);
+
+    // Create curved top using multiple points for smoother appearance
+    double midX = leftX + (barWidth / 2);
+    double midCutY = cutOffY;
+
+    clipPath.quadraticBezierTo(midX, midCutY, rightX, rightCutY);
+    clipPath.lineTo(rightX, rect.outerRect.bottom);
     clipPath.close();
 
     // Apply clipping and draw the bar
@@ -384,8 +394,8 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
             return Color(0xFFEF4444); // Red for puts
           }
         },
-        width: 0.3, // Very thin bars like in Figma design
-        spacing: 0.1, // Small spacing to see individual bars
+        width: 0.8, // Wider bars to create smoother parabolic appearance
+        spacing: 0.0, // No spacing for continuous parabolic shape
         onCreateRenderer: (ChartSeries<PayoffData, double> series) {
           return CustomParabolicColumnRenderer<PayoffData, double>(
             parabolicData,
@@ -394,18 +404,7 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
         },
       ),
 
-      // Parabolic curve overlay
-      SplineSeries<PayoffData, double>(
-        dataSource: parabolicData,
-        xValueMapper: (data, _) => data.strikePrice,
-        yValueMapper: (data, _) => data.payoff,
-        name: 'Payoff Curve',
-        color: Color(0xFF6366F1), // Blue-purple to match design
-        width: 2,
-        splineType: SplineType.cardinal,
-        cardinalSplineTension: 0.2,
-        markerSettings: MarkerSettings(isVisible: false),
-      ),
+      // Remove the parabolic curve line - bars will be cut to show the curve shape
     ];
   }
 
