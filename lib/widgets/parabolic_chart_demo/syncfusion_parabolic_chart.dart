@@ -35,51 +35,53 @@ class CustomParabolicColumnSegment<T, D> extends ColumnSegment<T, D> {
     double parabolicY = _getParabolicValueAtX(xValue);
 
     // Calculate the cut-off height based on parabolic curve
-    // The parabolic curve determines where to cut the bar from the top
+    // The bars should be cut at the parabolic curve height, not their original height
     double barHeight = rect.outerRect.height;
 
-    // Since we're using the actual parabolic data, the bars should be cut to match the curve
-    // Calculate the ratio of parabolic value to current bar value
-    double cutRatio = parabolicY / yValue;
-    if (cutRatio > 1.0) cutRatio = 1.0; // Don't extend bars beyond their height
-
-    // Calculate where to cut the bar
-    double cutOffY = rect.outerRect.bottom - (barHeight * cutRatio);
+    // Calculate the actual cut position based on parabolic curve
+    // If the parabolic value is less than the bar value, cut the bar
+    double cutOffY;
+    if (parabolicY < yValue) {
+      // Cut the bar at the parabolic curve height
+      double parabolicRatio = parabolicY / yValue;
+      cutOffY = rect.outerRect.bottom - (barHeight * parabolicRatio);
+    } else {
+      // Bar is shorter than parabolic curve, don't cut
+      cutOffY = rect.outerRect.top;
+    }
 
     // Create angled clipping path
     Path clipPath = Path();
 
-    // Create smooth parabolic cut by calculating neighboring points
-    double barWidth = rect.outerRect.width;
-    double leftX = rect.outerRect.left;
-    double rightX = rect.outerRect.right;
-
-    // Get parabolic values for neighboring points to create smooth curve
-    double leftNeighborX = xValue - 25; // Previous strike price
-    double rightNeighborX = xValue + 25; // Next strike price
-
+    // Create angled cut that follows parabolic curve but with flat tops
+    // Get neighboring points for smoother transition
+    double leftNeighborX = xValue - 25;
+    double rightNeighborX = xValue + 25;
     double leftNeighborY = _getParabolicValueAtX(leftNeighborX);
     double rightNeighborY = _getParabolicValueAtX(rightNeighborX);
 
-    // Calculate cut heights for smooth curve transition
-    double leftCutRatio = leftNeighborY / yValue;
-    double rightCutRatio = rightNeighborY / yValue;
-    if (leftCutRatio > 1.0) leftCutRatio = 1.0;
-    if (rightCutRatio > 1.0) rightCutRatio = 1.0;
+    // Calculate cut heights for neighboring bars
+    double leftCutOffY = cutOffY;
+    double rightCutOffY = cutOffY;
 
-    double leftCutY = rect.outerRect.bottom - (barHeight * leftCutRatio);
-    double rightCutY = rect.outerRect.bottom - (barHeight * rightCutRatio);
+    if (leftNeighborY < yValue) {
+      double leftRatio = leftNeighborY / yValue;
+      leftCutOffY = rect.outerRect.bottom - (barHeight * leftRatio);
+    }
 
-    // Create smooth curved top using quadratic bezier
-    clipPath.moveTo(leftX, rect.outerRect.bottom);
-    clipPath.lineTo(leftX, leftCutY);
+    if (rightNeighborY < yValue) {
+      double rightRatio = rightNeighborY / yValue;
+      rightCutOffY = rect.outerRect.bottom - (barHeight * rightRatio);
+    }
 
-    // Create curved top using multiple points for smoother appearance
-    double midX = leftX + (barWidth / 2);
-    double midCutY = cutOffY;
-
-    clipPath.quadraticBezierTo(midX, midCutY, rightX, rightCutY);
-    clipPath.lineTo(rightX, rect.outerRect.bottom);
+    // Create angled cut path
+    clipPath.moveTo(rect.outerRect.left, rect.outerRect.bottom);
+    clipPath.lineTo(rect.outerRect.left, leftCutOffY);
+    clipPath.lineTo(
+      rect.outerRect.right,
+      rightCutOffY,
+    ); // Angled cut following parabolic curve
+    clipPath.lineTo(rect.outerRect.right, rect.outerRect.bottom);
     clipPath.close();
 
     // Apply clipping and draw the bar
@@ -394,8 +396,8 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
             return Color(0xFFEF4444); // Red for puts
           }
         },
-        width: 0.8, // Wider bars to create smoother parabolic appearance
-        spacing: 0.0, // No spacing for continuous parabolic shape
+        width: 0.6, // Thinner bars like in Figma design
+        spacing: 0.1, // Small spacing to see individual bars clearly
         onCreateRenderer: (ChartSeries<PayoffData, double> series) {
           return CustomParabolicColumnRenderer<PayoffData, double>(
             parabolicData,

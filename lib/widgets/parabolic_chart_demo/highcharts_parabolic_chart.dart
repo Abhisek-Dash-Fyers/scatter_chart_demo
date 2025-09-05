@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:highcharts_flutter/highcharts.dart';
 import '../../main.dart';
-import 'dart:math' as math;
 
 class HighchartsParabolicChart extends StatefulWidget {
   final List<PayoffData> payoffData;
@@ -179,10 +178,10 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
                   ],
                   plotOptions: HighchartsPlotOptions(
                     column: HighchartsColumnSeriesOptions(
-                      groupPadding: 0.1, // Small group padding
-                      pointPadding: 0.1, // Small padding for thin bars
+                      groupPadding: 0.1, // Small padding to see individual bars
+                      pointPadding: 0.05, // Small padding between bars
                       borderWidth: 0,
-                      maxPointWidth: 8, // Limit bar width to make them thin
+                      maxPointWidth: 12, // Limit bar width for thin appearance
                     ),
                   ),
                   tooltip: HighchartsTooltipOptions(
@@ -251,40 +250,30 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
     final parabolicData = _generateParabolicData();
 
     return [
-      // All bars starting from bottom with clipping to parabolic curve
+      // Bars cut at parabolic curve height - simpler approach
       HighchartsColumnSeries(
         name: 'Options',
         dataPoints: allData.map((d) {
-          // Clip the bar height to the parabolic curve value
+          // Get the parabolic curve value at this strike price
           double parabolicValue = _getParabolicValueAtX(
             d.strikePrice,
             parabolicData,
           );
-          double clippedValue = math.min(d.payoff, parabolicValue);
+
+          // Cut the bar at parabolic curve height
+          double barHeight = d.payoff > parabolicValue
+              ? parabolicValue
+              : d.payoff;
 
           // Color based on type
           String color = d.type == 'call' ? '#22C55E' : '#EF4444';
 
           return HighchartsColumnSeriesDataOptions(
             x: d.strikePrice,
-            y: clippedValue, // All positive values from bottom
+            y: barHeight, // Bar cut at parabolic curve height
             color: color,
           );
         }).toList(),
-      ),
-
-      // Parabolic curve overlay
-      HighchartsSplineSeries(
-        name: 'Payoff Curve',
-        dataPoints: parabolicData
-            .map(
-              (d) => HighchartsSplineSeriesDataOptions(
-                x: d.strikePrice,
-                y: d.payoff,
-                color: '#6366F1', // Blue-purple to match design
-              ),
-            )
-            .toList(),
       ),
     ];
   }
