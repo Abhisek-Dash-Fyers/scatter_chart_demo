@@ -42,40 +42,192 @@ class _BubbleChartPageState extends State<BubbleChartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Syncfusion Bubble Chart")),
-      body: SfCartesianChart(
-        plotAreaBorderWidth: 1,
-        title: const ChartTitle(text: 'OI vs Price Change'),
-        tooltipBehavior: _tooltipBehavior,
-        primaryXAxis: NumericAxis(
-          title: AxisTitle(text: '% Change in OI'),
-          minimum: -50,
-          maximum: 50,
-          majorGridLines: const MajorGridLines(width: 0),
-          plotBands: [
-            PlotBand(
-              start: 0,
-              end: 0,
-              borderWidth: 2,
-              borderColor: Colors.black,
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text('Stock Heatmap Chart'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+      ),
+      body: Column(
+        children: [
+          // Top navigation and controls matching Figma
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Main category tabs
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        _buildTab('All', true),
+                        _buildTab('Indices', false),
+                        _buildTab('Commodities', false),
+                        _buildTab('Stocks', false),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text('Time frequency:', style: TextStyle(fontSize: 12)),
+                        SizedBox(width: 8),
+                        _buildTimeButton('1d', true),
+                        _buildTimeButton('1h', false),
+                        _buildTimeButton('30m', false),
+                        _buildTimeButton('15m', false),
+                        _buildTimeButton('5m', false),
+                        _buildTimeButton('3m', false),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                // Secondary tabs
+                Row(
+                  children: [
+                    _buildSecondaryTab('Heatmap', true),
+                    _buildSecondaryTab('Top gainers and losers', false),
+                    _buildSecondaryTab('Expiring soon', false),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-        primaryYAxis: NumericAxis(
-          title: AxisTitle(text: '% Change in Price'),
-          minimum: -4,
-          maximum: 4,
-          majorGridLines: const MajorGridLines(width: 0),
-          plotBands: [
-            PlotBand(
-              start: 0,
-              end: 0,
-              borderWidth: 2,
-              borderColor: Colors.black,
+          ),
+
+          // Chart area with native annotations
+          Expanded(
+            child: SfCartesianChart(
+              plotAreaBorderWidth: 0,
+              title: const ChartTitle(text: ''),
+              tooltipBehavior: _tooltipBehavior,
+              margin: EdgeInsets.fromLTRB(60, 40, 40, 60),
+              primaryXAxis: NumericAxis(
+                title: AxisTitle(
+                  text: '% change in OI',
+                  textStyle: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                minimum: -50,
+                maximum: 50,
+                interval: 10,
+                majorGridLines: const MajorGridLines(width: 0),
+                minorGridLines: const MinorGridLines(width: 0),
+                axisLine: const AxisLine(width: 0),
+                majorTickLines: const MajorTickLines(size: 0),
+                labelStyle: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                ),
+                labelFormat: '{value}%',
+                plotBands: [
+                  PlotBand(
+                    start: 0,
+                    end: 0,
+                    borderWidth: 1.5,
+                    borderColor: Colors.black87,
+                  ),
+                ],
+              ),
+              primaryYAxis: NumericAxis(
+                title: AxisTitle(
+                  text: '% change in price',
+                  textStyle: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                minimum: -4,
+                maximum: 4,
+                interval: 1,
+                majorGridLines: const MajorGridLines(width: 0),
+                minorGridLines: const MinorGridLines(width: 0),
+                axisLine: const AxisLine(width: 0),
+                majorTickLines: const MajorTickLines(size: 0),
+                labelStyle: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                ),
+                labelFormat: '{value}%',
+                plotBands: [
+                  PlotBand(
+                    start: 0,
+                    end: 0,
+                    borderWidth: 1.5,
+                    borderColor: Colors.black87,
+                  ),
+                ],
+              ),
+              series: _buildBubbleSeries(),
+              // Native Syncfusion annotations for quadrant labels
+              annotations: _buildQuadrantAnnotations(),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTab(String text, bool isSelected) {
+    return Container(
+      margin: EdgeInsets.only(right: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue.shade50 : Colors.transparent,
+        borderRadius: BorderRadius.circular(4),
+        border: isSelected ? Border.all(color: Colors.blue.shade200) : null,
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isSelected ? Colors.blue.shade700 : Colors.grey.shade600,
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
         ),
-        series: _buildBubbleSeries(),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryTab(String text, bool isSelected) {
+    return Container(
+      margin: EdgeInsets.only(right: 16),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue.shade50 : Colors.transparent,
+        borderRadius: BorderRadius.circular(4),
+        border: isSelected ? Border.all(color: Colors.blue.shade200) : null,
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isSelected ? Colors.blue.shade700 : Colors.grey.shade600,
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeButton(String text, bool isSelected) {
+    return Container(
+      margin: EdgeInsets.only(right: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.grey.shade800 : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isSelected ? Colors.white : Colors.grey.shade600,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -264,6 +416,87 @@ class _BubbleChartPageState extends State<BubbleChartPage> {
             },
       ),
     );
+  }
+
+  // Build quadrant annotations using native Syncfusion annotations
+  List<CartesianChartAnnotation> _buildQuadrantAnnotations() {
+    return [
+      // Short covering (Upper Left Quadrant)
+      CartesianChartAnnotation(
+        widget: Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            'Short covering',
+            style: TextStyle(
+              color: Colors.blue.shade600,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        coordinateUnit: CoordinateUnit.percentage,
+        region: AnnotationRegion.plotArea,
+        x: '15%', // Left side of chart
+        y: '15%', // Top of chart (percentage from top)
+      ),
+
+      // Long buildup (Upper Right Quadrant)
+      CartesianChartAnnotation(
+        widget: Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            'Long buildup',
+            style: TextStyle(
+              color: Colors.blue.shade600,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        coordinateUnit: CoordinateUnit.percentage,
+        region: AnnotationRegion.plotArea,
+        x: '85%', // Right side of chart
+        y: '15%', // Top of chart
+      ),
+
+      // Long unwinding (Lower Left Quadrant)
+      CartesianChartAnnotation(
+        widget: Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            'Long unwinding',
+            style: TextStyle(
+              color: Colors.blue.shade600,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        coordinateUnit: CoordinateUnit.percentage,
+        region: AnnotationRegion.plotArea,
+        x: '15%', // Left side of chart
+        y: '85%', // Bottom of chart
+      ),
+
+      // Short buildup (Lower Right Quadrant)
+      CartesianChartAnnotation(
+        widget: Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            'Short buildup',
+            style: TextStyle(
+              color: Colors.blue.shade600,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        coordinateUnit: CoordinateUnit.percentage,
+        region: AnnotationRegion.plotArea,
+        x: '85%', // Right side of chart
+        y: '85%', // Bottom of chart
+      ),
+    ];
   }
 }
 
