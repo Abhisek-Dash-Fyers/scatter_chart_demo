@@ -86,7 +86,7 @@ class StockHeatmapChart extends StatelessWidget {
                       tickInterval: 10,
                       lineWidth: 1,
                       lineColor: '#d0d0d0',
-                      gridLineWidth: 1,
+                      gridLineWidth: 0,
                       gridLineColor: '#f0f0f0',
                       plotLines: [
                         HighchartsXAxisPlotLinesOptions(
@@ -121,7 +121,7 @@ class StockHeatmapChart extends StatelessWidget {
                       tickInterval: 1,
                       lineWidth: 1,
                       lineColor: '#d0d0d0',
-                      gridLineWidth: 1,
+                      gridLineWidth: 0,
                       gridLineColor: '#f0f0f0',
                       plotLines: [
                         HighchartsYAxisPlotLinesOptions(
@@ -146,8 +146,8 @@ class StockHeatmapChart extends StatelessWidget {
                       minSize: 80,
                       maxSize: 80,
                       sizeBy: 'area',
-                      zMin: 30,
-                      zMax: 60,
+                      zMin: 80,
+                      zMax: 5000,
                       displayNegative: true,
                       sizeByAbsoluteValue: false,
                       opacity: 0.9,
@@ -164,8 +164,85 @@ class StockHeatmapChart extends StatelessWidget {
                         },
                       ),
                       tooltip: HighchartsBubbleSeriesTooltipOptions(
-                        pointFormat:
-                            '<b>{point.name}</b><br/>OI Change: {point.x}%<br/>Price Change: {point.y}%<br/>Market Cap: {point.z}',
+                        pointFormat: '''
+                          <table style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 1px solid #e5e7eb; min-width: 280px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; border-collapse: collapse;">
+                            
+                            <!-- Row 1: Company logo + name with price -->
+                            <tr>
+                              <td colspan="2" style="padding-bottom: 16px;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                  <tr>
+                                    <td style="width: 50px; vertical-align: middle;">
+                                      <div style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 50%; display: inline-block; text-align: center; line-height: 40px; border: 1px solid #e9ecef; font-size: 12px; font-weight: bold; color: #6c757d;">
+                                        {point.name}
+                                      </div>
+                                    </td>
+                                    <td style="vertical-align: middle; padding-left: 12px;">
+                                      <div style="font-weight: 600; font-size: 18px; color: #212529;">
+                                        {point.name} {point.z} <span style="color: #28a745; font-size: 16px;">↗</span>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                            
+                            <!-- Row 2: Price change and OI change side by side -->
+                            <tr>
+                              <td style="width: 50%; padding-right: 20px; padding-bottom: 20px; vertical-align: top;">
+                                <div style="font-size: 14px; color: #6c757d; margin-bottom: 6px; font-weight: 500;">
+                                  Price chg%
+                                </div>
+                                <div style="font-size: 16px; font-weight: 600; color: #212529;">
+                                  {point.y}<span style="color: #28a745;">({point.y}%)</span>
+                                </div>
+                              </td>
+                              <td style="width: 50%; padding-bottom: 20px; vertical-align: top;">
+                                <div style="font-size: 14px; color: #6c757d; margin-bottom: 6px; font-weight: 500;">
+                                  OI chg%
+                                </div>
+                                <div style="font-size: 16px; font-weight: 600; color: #212529;">
+                                  {point.x}L<span style="color: #dc3545;">({point.x}%)</span>
+                                </div>
+                              </td>
+                            </tr>
+                            
+                            <!-- Row 3: 5 Action buttons -->
+                            <tr>
+                              <td colspan="2">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                  <tr>
+                                    <td style="width: 20%; text-align: center;">
+                                      <button style="background: #28a745; color: white; border: none; border-radius: 8px; width: 44px; height: 44px; font-weight: bold; font-size: 16px; cursor: pointer;">
+                                        B
+                                      </button>
+                                    </td>
+                                    <td style="width: 20%; text-align: center;">
+                                      <button style="background: #dc3545; color: white; border: none; border-radius: 8px; width: 44px; height: 44px; font-weight: bold; font-size: 16px; cursor: pointer;">
+                                        S
+                                      </button>
+                                    </td>
+                                    <td style="width: 20%; text-align: center;">
+                                      <button style="background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; font-size: 18px;">
+                                        ⫿
+                                      </button>
+                                    </td>
+                                    <td style="width: 20%; text-align: center;">
+                                      <button style="background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; font-size: 18px;">
+                                        ⊞
+                                      </button>
+                                    </td>
+                                    <td style="width: 20%; text-align: center;">
+                                      <button style="background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; font-size: 18px;">
+                                        📈
+                                      </button>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        ''',
                       ),
                       marker: HighchartsBubbleSeriesMarkerOptions(
                         lineWidth: 2,
@@ -192,7 +269,7 @@ class StockHeatmapChart extends StatelessWidget {
                             (stock) => HighchartsBubbleSeriesDataOptions(
                               x: stock.oiChange,
                               y: stock.priceChange,
-                              z: stock.marketCap,
+                              z: stock.currentPrice,
                               name: stock.symbol,
                               color:
                                   stock.solidColor, // Use solid color for base

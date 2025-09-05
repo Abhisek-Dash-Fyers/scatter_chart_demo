@@ -186,6 +186,13 @@ class _StockHeatmapChartState extends State<StockHeatmapChart> {
                           .toList(),
                       scatterTouchData: ScatterTouchData(
                         enabled: true,
+                        touchCallback:
+                            (
+                              FlTouchEvent event,
+                              ScatterTouchResponse? touchResponse,
+                            ) {
+                              // Handle touch events if needed
+                            },
                         touchTooltipData: ScatterTouchTooltipData(
                           getTooltipItems: (ScatterSpot touchedSpot) {
                             final stock = widget.stockData.firstWhere(
@@ -194,11 +201,14 @@ class _StockHeatmapChartState extends State<StockHeatmapChart> {
                                   s.priceChange == touchedSpot.y,
                             );
                             return ScatterTooltipItem(
-                              '${stock.symbol}\nOI: ${stock.oiChange}%\nPrice: ${stock.priceChange}%',
+                              _buildTooltipContent(stock),
                               textStyle: TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                backgroundColor: Colors.black87,
                               ),
+                              textAlign: TextAlign.left,
                             );
                           },
                         ),
@@ -321,6 +331,15 @@ class _StockHeatmapChartState extends State<StockHeatmapChart> {
         ),
       ),
     );
+  }
+
+  String _buildTooltipContent(StockData stock) {
+    return '''${stock.symbol} ${stock.currentPrice.toStringAsFixed(2)} ↗
+
+Price chg%: ${stock.priceChange.toStringAsFixed(1)}(${stock.priceChange >= 0 ? '+' : ''}${stock.priceChange.toStringAsFixed(1)}%)
+OI chg%: ${stock.oiChange.abs().toStringAsFixed(2)}L(${stock.oiChange >= 0 ? '+' : ''}${stock.oiChange.toStringAsFixed(2)}%)
+
+[B] [S] [⫿] [⊞] [📈]''';
   }
 }
 
