@@ -2,6 +2,124 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../main.dart';
 
+// Custom Column Series Renderer for angled cut-off bars
+class CustomParabolicColumnRenderer<T, D> extends ColumnSeriesRenderer<T, D> {
+  final List<PayoffData> parabolicData;
+  final double maxPain;
+
+  CustomParabolicColumnRenderer(this.parabolicData, this.maxPain);
+
+  @override
+  ColumnSegment<T, D> createSegment() {
+    return CustomParabolicColumnSegment<T, D>(parabolicData, maxPain);
+  }
+}
+
+class CustomParabolicColumnSegment<T, D> extends ColumnSegment<T, D> {
+  final List<PayoffData> parabolicData;
+  final double maxPain;
+
+  CustomParabolicColumnSegment(this.parabolicData, this.maxPain);
+
+  @override
+  void onPaint(Canvas canvas) {
+    final Paint fillPaint = getFillPaint();
+    final Paint strokePaint = getStrokePaint();
+    final RRect rect = segmentRect!;
+
+    // Get the current data point
+    final double xValue = series.xValues[currentSegmentIndex].toDouble();
+    final double yValue = series.yValues[currentSegmentIndex].toDouble();
+
+    // Calculate parabolic curve value at this x position
+    double parabolicY = _getParabolicValueAtX(xValue);
+
+    // Calculate the cut-off height based on parabolic curve
+    // The parabolic curve determines where to cut the bar from the top
+    double barHeight = rect.outerRect.height;
+
+    // Since we're using the actual parabolic data, the bars should be cut to match the curve
+    // Calculate the ratio of parabolic value to current bar value
+    double cutRatio = parabolicY / yValue;
+    if (cutRatio > 1.0) cutRatio = 1.0; // Don't extend bars beyond their height
+
+    // Calculate where to cut the bar
+    double cutOffY = rect.outerRect.bottom - (barHeight * cutRatio);
+
+    // Create angled clipping path
+    Path clipPath = Path();
+
+    // Create angled cut at the top following parabolic curve direction
+    double leftCutY = cutOffY;
+    double rightCutY = cutOffY;
+
+    // Calculate angle based on position relative to max pain and neighboring points
+    double angleOffset = 5.0; // Pixels for angle
+
+    if (xValue < maxPain) {
+      // Left side of max pain - angle slopes down to the right
+      rightCutY = cutOffY + angleOffset;
+    } else if (xValue > maxPain) {
+      // Right side of max pain - angle slopes down to the left
+      leftCutY = cutOffY + angleOffset;
+    }
+    // At max pain, keep it flat (no angle)
+
+    // Create the clipping path with angled top
+    clipPath.moveTo(rect.outerRect.left, rect.outerRect.bottom);
+    clipPath.lineTo(rect.outerRect.left, leftCutY);
+    clipPath.lineTo(rect.outerRect.right, rightCutY);
+    clipPath.lineTo(rect.outerRect.right, rect.outerRect.bottom);
+    clipPath.close();
+
+    // Apply clipping and draw the bar
+    canvas.save();
+    canvas.clipPath(clipPath);
+
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        rect.outerRect,
+        topLeft: Radius.circular(0),
+        topRight: Radius.circular(0),
+        bottomLeft: Radius.circular(1),
+        bottomRight: Radius.circular(1),
+      ),
+      fillPaint,
+    );
+
+    if (strokePaint.color != Colors.transparent) {
+      canvas.drawRRect(
+        RRect.fromRectAndCorners(
+          rect.outerRect,
+          topLeft: Radius.circular(0),
+          topRight: Radius.circular(0),
+          bottomLeft: Radius.circular(1),
+          bottomRight: Radius.circular(1),
+        ),
+        strokePaint,
+      );
+    }
+
+    canvas.restore();
+  }
+
+  double _getParabolicValueAtX(double x) {
+    // Find the closest parabolic data point
+    PayoffData? closest;
+    double minDistance = double.infinity;
+
+    for (PayoffData data in parabolicData) {
+      double distance = (data.strikePrice - x).abs();
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = data;
+      }
+    }
+
+    return closest?.payoff ?? 20000;
+  }
+}
+
 class SyncfusionParabolicChart extends StatefulWidget {
   final List<PayoffData> payoffData;
   final double currentPrice;
@@ -85,9 +203,9 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
                     ),
                     Row(
                       children: [
-                        _buildLegendItem('Call', Color(0xFF4CAF50)),
+                        _buildLegendItem('Call', Color(0xFF22C55E)),
                         SizedBox(width: 16),
-                        _buildLegendItem('Put', Color(0xFFFF5722)),
+                        _buildLegendItem('Put', Color(0xFFEF4444)),
                       ],
                     ),
                   ],
@@ -144,7 +262,7 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
                   ),
                   minimum: 22400,
                   maximum: 26000,
-                  interval: 400,
+                  interval: 200, // Smaller intervals for more detail
                   majorGridLines: MajorGridLines(
                     width: 1,
                     color: Colors.grey.shade200,
@@ -181,9 +299,7 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
                       fontSize: 12,
                     ),
                   ),
-                  minimum: 0,
-                  maximum: 140000,
-                  interval: 20000,
+                  // Let the chart auto-scale based on data
                   majorGridLines: MajorGridLines(
                     width: 1,
                     color: Colors.grey.shade200,
@@ -248,51 +364,47 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
   }
 
   List<CartesianSeries> _buildSeries() {
-    // Separate call and put data
-    final callData = widget.payoffData.where((d) => d.type == 'call').toList();
-    final putData = widget.payoffData.where((d) => d.type == 'put').toList();
+    // Combine all data and start from bottom (no negative values)
+    final allData = [...widget.payoffData];
+    final parabolicData = _generateParabolicData();
 
     return [
-      // Call options (green bars)
+      // All bars (both Call and Put) starting from bottom with different colors
       ColumnSeries<PayoffData, double>(
-        dataSource: callData,
+        dataSource: allData,
         xValueMapper: (data, _) => data.strikePrice,
-        yValueMapper: (data, _) => data.payoff,
-        name: 'Call',
-        color: Color(0xFF4CAF50),
-        width: 0.8,
-        spacing: 0.1,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(2),
-          topRight: Radius.circular(2),
-        ),
-      ),
-
-      // Put options (red bars, negative values)
-      ColumnSeries<PayoffData, double>(
-        dataSource: putData,
-        xValueMapper: (data, _) => data.strikePrice,
-        yValueMapper: (data, _) => -data.payoff, // Negative for downward bars
-        name: 'Put',
-        color: Color(0xFFFF5722),
-        width: 0.8,
-        spacing: 0.1,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(2),
-          bottomRight: Radius.circular(2),
-        ),
+        yValueMapper: (data, _) =>
+            data.payoff, // All positive values from bottom
+        name: 'Options',
+        // Color based on type and position
+        pointColorMapper: (data, _) {
+          if (data.type == 'call') {
+            return Color(0xFF22C55E); // Green for calls
+          } else {
+            return Color(0xFFEF4444); // Red for puts
+          }
+        },
+        width: 0.3, // Very thin bars like in Figma design
+        spacing: 0.1, // Small spacing to see individual bars
+        onCreateRenderer: (ChartSeries<PayoffData, double> series) {
+          return CustomParabolicColumnRenderer<PayoffData, double>(
+            parabolicData,
+            widget.maxPain,
+          );
+        },
       ),
 
       // Parabolic curve overlay
       SplineSeries<PayoffData, double>(
-        dataSource: _generateParabolicData(),
+        dataSource: parabolicData,
         xValueMapper: (data, _) => data.strikePrice,
         yValueMapper: (data, _) => data.payoff,
         name: 'Payoff Curve',
-        color: Colors.purple.shade600,
-        width: 3,
+        color: Color(0xFF6366F1), // Blue-purple to match design
+        width: 2,
         splineType: SplineType.cardinal,
         cardinalSplineTension: 0.2,
+        markerSettings: MarkerSettings(isVisible: false),
       ),
     ];
   }
@@ -300,11 +412,13 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
   List<PayoffData> _generateParabolicData() {
     List<PayoffData> parabolicData = [];
 
-    // Generate parabolic curve data points
-    for (double strike = 22400; strike <= 26000; strike += 50) {
+    // Generate parabolic curve data points that match the bar data
+    for (double strike = 22400; strike <= 26000; strike += 25) {
       // Create a parabolic shape with minimum at max pain point
       double distance = (strike - widget.maxPain).abs();
-      double payoff = (distance * distance) / 1000 + 20000; // Parabolic formula
+      double minValue = 5000;
+      double a = 0.015; // Same formula as main data
+      double payoff = (a * distance * distance) + minValue;
 
       parabolicData.add(
         PayoffData(strikePrice: strike, payoff: payoff, type: 'curve'),
@@ -337,7 +451,7 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
         coordinateUnit: CoordinateUnit.point,
         region: AnnotationRegion.chart,
         x: widget.currentPrice,
-        y: 120000,
+        y: 30000, // Adjust for new parabolic scale
       ),
 
       // Max pain annotation
@@ -361,7 +475,7 @@ class _SyncfusionParabolicChartState extends State<SyncfusionParabolicChart> {
         coordinateUnit: CoordinateUnit.point,
         region: AnnotationRegion.chart,
         x: widget.maxPain,
-        y: 120000,
+        y: 30000, // Adjust for new parabolic scale
       ),
     ];
   }

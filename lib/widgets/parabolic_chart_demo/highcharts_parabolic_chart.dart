@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:highcharts_flutter/highcharts.dart';
 import '../../main.dart';
+import 'dart:math' as math;
 
 class HighchartsParabolicChart extends StatefulWidget {
   final List<PayoffData> payoffData;
@@ -63,9 +64,9 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
                     ),
                     Row(
                       children: [
-                        _buildLegendItem('Call', Color(0xFF4CAF50)),
+                        _buildLegendItem('Call', Color(0xFF22C55E)),
                         SizedBox(width: 16),
-                        _buildLegendItem('Put', Color(0xFFFF5722)),
+                        _buildLegendItem('Put', Color(0xFFEF4444)),
                       ],
                     ),
                   ],
@@ -128,7 +129,7 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
                       ),
                       min: 22400,
                       max: 26000,
-                      tickInterval: 400,
+                      tickInterval: 200, // Smaller intervals for more detail
                       gridLineWidth: 1,
                       gridLineColor: '#e0e0e0',
                       lineColor: '#cccccc',
@@ -163,19 +164,11 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
                           color: '#666666',
                         ),
                       ),
-                      min: -140000,
-                      max: 140000,
-                      tickInterval: 20000,
+                      // Let chart auto-scale from data, starting from 0
+                      min: 0,
                       gridLineWidth: 1,
                       gridLineColor: '#e0e0e0',
                       lineColor: '#cccccc',
-                      plotLines: [
-                        HighchartsYAxisPlotLinesOptions(
-                          value: 0,
-                          color: '#000000',
-                          width: 1,
-                        ),
-                      ],
                       labels: HighchartsYAxisLabelsOptions(
                         style: HighchartsXAxisLabelsStyleOptions(
                           fontSize: '10px',
@@ -186,9 +179,10 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
                   ],
                   plotOptions: HighchartsPlotOptions(
                     column: HighchartsColumnSeriesOptions(
-                      groupPadding: 0.1,
-                      pointPadding: 0.05,
+                      groupPadding: 0.1, // Small group padding
+                      pointPadding: 0.1, // Small padding for thin bars
                       borderWidth: 0,
+                      maxPointWidth: 8, // Limit bar width to make them thin
                     ),
                   ),
                   tooltip: HighchartsTooltipOptions(
@@ -250,40 +244,33 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
   }
 
   List<HighchartsSeries> _buildSeries() {
-    // Separate call and put data
-    final callData = widget.payoffData.where((d) => d.type == 'call').toList();
-    final putData = widget.payoffData.where((d) => d.type == 'put').toList();
+    // Combine all data and start from bottom (no negative values)
+    final allData = [...widget.payoffData];
 
     // Generate parabolic curve data
     final parabolicData = _generateParabolicData();
 
     return [
-      // Call options (green bars)
+      // All bars starting from bottom with clipping to parabolic curve
       HighchartsColumnSeries(
-        name: 'Call',
-        dataPoints: callData
-            .map(
-              (d) => HighchartsColumnSeriesDataOptions(
-                x: d.strikePrice,
-                y: d.payoff,
-                color: '#4CAF50',
-              ),
-            )
-            .toList(),
-      ),
+        name: 'Options',
+        dataPoints: allData.map((d) {
+          // Clip the bar height to the parabolic curve value
+          double parabolicValue = _getParabolicValueAtX(
+            d.strikePrice,
+            parabolicData,
+          );
+          double clippedValue = math.min(d.payoff, parabolicValue);
 
-      // Put options (red bars, negative values)
-      HighchartsColumnSeries(
-        name: 'Put',
-        dataPoints: putData
-            .map(
-              (d) => HighchartsColumnSeriesDataOptions(
-                x: d.strikePrice,
-                y: -d.payoff, // Negative for downward bars
-                color: '#FF5722',
-              ),
-            )
-            .toList(),
+          // Color based on type
+          String color = d.type == 'call' ? '#22C55E' : '#EF4444';
+
+          return HighchartsColumnSeriesDataOptions(
+            x: d.strikePrice,
+            y: clippedValue, // All positive values from bottom
+            color: color,
+          );
+        }).toList(),
       ),
 
       // Parabolic curve overlay
@@ -294,7 +281,7 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
               (d) => HighchartsSplineSeriesDataOptions(
                 x: d.strikePrice,
                 y: d.payoff,
-                color: '#9C27B0',
+                color: '#6366F1', // Blue-purple to match design
               ),
             )
             .toList(),
@@ -305,11 +292,13 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
   List<PayoffData> _generateParabolicData() {
     List<PayoffData> parabolicData = [];
 
-    // Generate parabolic curve data points
-    for (double strike = 22400; strike <= 26000; strike += 50) {
+    // Generate parabolic curve data points that match the bar data
+    for (double strike = 22400; strike <= 26000; strike += 25) {
       // Create a parabolic shape with minimum at max pain point
       double distance = (strike - widget.maxPain).abs();
-      double payoff = (distance * distance) / 1000 + 20000; // Parabolic formula
+      double minValue = 5000;
+      double a = 0.015; // Same formula as main data
+      double payoff = (a * distance * distance) + minValue;
 
       parabolicData.add(
         PayoffData(strikePrice: strike, payoff: payoff, type: 'curve'),
@@ -317,5 +306,21 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
     }
 
     return parabolicData;
+  }
+
+  double _getParabolicValueAtX(double x, List<PayoffData> parabolicData) {
+    // Find the closest parabolic data point
+    PayoffData? closest;
+    double minDistance = double.infinity;
+
+    for (PayoffData data in parabolicData) {
+      double distance = (data.strikePrice - x).abs();
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = data;
+      }
+    }
+
+    return closest?.payoff ?? 20000;
   }
 }
