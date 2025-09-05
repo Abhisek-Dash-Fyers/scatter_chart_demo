@@ -15,6 +15,21 @@
                 "--disable-web-security",
                 // "--web-hostname=10.26.6.91"
             ]
+        },
+        {
+            "name": "strategy_payoff_chart_web",
+            "cwd": "/Users/em1053/Desktop/demo_projects/strategy_payoff_chart",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug",
+            "deviceId": "chrome",
+            "args": [
+                "--web-port=8001",
+                "--web-enable-expression-evaluation",
+                "--web-browser-flag",
+                "--disable-web-security",
+                // "--web-hostname=10.26.6.91"
+            ]
         }
     ]
 }

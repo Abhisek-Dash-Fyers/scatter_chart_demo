@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'widgets/highcharts_bubble_chart.dart' as highcharts;
-import 'widgets/fl_chart_bubble_chart.dart' as fl_chart;
-import 'widgets/syncfusion_bubble_chart.dart' as syncfusion;
+import 'widgets/bubble_chart_demo/highcharts_bubble_chart.dart' as highcharts;
+import 'widgets/bubble_chart_demo/fl_chart_bubble_chart.dart' as fl_chart;
+import 'widgets/bubble_chart_demo/syncfusion_bubble_chart.dart' as syncfusion;
+import 'widgets/parabolic_chart_demo/syncfusion_parabolic_chart.dart' as syncfusion_parabolic;
+import 'widgets/parabolic_chart_demo/highcharts_parabolic_chart.dart' as highcharts_parabolic;
 
 void main() {
   runApp(MaterialApp(home: ChartDemoApp()));
@@ -182,6 +184,19 @@ class StockData {
   }
 }
 
+// Data model for parabolic chart
+class PayoffData {
+  final double strikePrice;
+  final double payoff;
+  final String type; // 'call' or 'put'
+
+  PayoffData({
+    required this.strikePrice,
+    required this.payoff,
+    required this.type,
+  });
+}
+
 // Main app with TabController
 class ChartDemoApp extends StatefulWidget {
   const ChartDemoApp({super.key});
@@ -193,6 +208,7 @@ class ChartDemoApp extends StatefulWidget {
 class _ChartDemoAppState extends State<ChartDemoApp>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _selectedBottomNavIndex = 0;
 
   // Centralized stock data - single source of truth
   final List<StockData> stockData = [
@@ -421,6 +437,90 @@ class _ChartDemoAppState extends State<ChartDemoApp>
     ),
   ];
 
+  // Dummy data for parabolic charts
+  final List<PayoffData> payoffData = [
+    // Call options data (positive payoff)
+    PayoffData(strikePrice: 22400, payoff: 120000, type: 'call'),
+    PayoffData(strikePrice: 22500, payoff: 110000, type: 'call'),
+    PayoffData(strikePrice: 22600, payoff: 95000, type: 'call'),
+    PayoffData(strikePrice: 22700, payoff: 80000, type: 'call'),
+    PayoffData(strikePrice: 22800, payoff: 70000, type: 'call'),
+    PayoffData(strikePrice: 22900, payoff: 60000, type: 'call'),
+    PayoffData(strikePrice: 23000, payoff: 50000, type: 'call'),
+    PayoffData(strikePrice: 23100, payoff: 45000, type: 'call'),
+    PayoffData(strikePrice: 23200, payoff: 40000, type: 'call'),
+    PayoffData(strikePrice: 23300, payoff: 35000, type: 'call'),
+    PayoffData(strikePrice: 23400, payoff: 30000, type: 'call'),
+    PayoffData(strikePrice: 23500, payoff: 25000, type: 'call'),
+    PayoffData(strikePrice: 23600, payoff: 22000, type: 'call'),
+    PayoffData(strikePrice: 23700, payoff: 20000, type: 'call'),
+    PayoffData(strikePrice: 23800, payoff: 18000, type: 'call'),
+    PayoffData(strikePrice: 23900, payoff: 16000, type: 'call'),
+    PayoffData(strikePrice: 24000, payoff: 15000, type: 'call'),
+    PayoffData(strikePrice: 24100, payoff: 14000, type: 'call'),
+    PayoffData(strikePrice: 24200, payoff: 13000, type: 'call'),
+    PayoffData(strikePrice: 24300, payoff: 12000, type: 'call'),
+    PayoffData(strikePrice: 24400, payoff: 11000, type: 'call'),
+    PayoffData(strikePrice: 24500, payoff: 10000, type: 'call'),
+    PayoffData(strikePrice: 24600, payoff: 12000, type: 'call'),
+    PayoffData(strikePrice: 24700, payoff: 15000, type: 'call'),
+    PayoffData(strikePrice: 24800, payoff: 18000, type: 'call'),
+    PayoffData(strikePrice: 24900, payoff: 22000, type: 'call'),
+    PayoffData(strikePrice: 25000, payoff: 25000, type: 'call'),
+    PayoffData(strikePrice: 25100, payoff: 30000, type: 'call'),
+    PayoffData(strikePrice: 25200, payoff: 35000, type: 'call'),
+    PayoffData(strikePrice: 25300, payoff: 40000, type: 'call'),
+    PayoffData(strikePrice: 25400, payoff: 45000, type: 'call'),
+    PayoffData(strikePrice: 25500, payoff: 50000, type: 'call'),
+    PayoffData(strikePrice: 25600, payoff: 60000, type: 'call'),
+    PayoffData(strikePrice: 25700, payoff: 70000, type: 'call'),
+    PayoffData(strikePrice: 25800, payoff: 85000, type: 'call'),
+    PayoffData(strikePrice: 25900, payoff: 100000, type: 'call'),
+    PayoffData(strikePrice: 26000, payoff: 115000, type: 'call'),
+
+    // Put options data (negative payoff for display)
+    PayoffData(strikePrice: 22400, payoff: 115000, type: 'put'),
+    PayoffData(strikePrice: 22500, payoff: 100000, type: 'put'),
+    PayoffData(strikePrice: 22600, payoff: 85000, type: 'put'),
+    PayoffData(strikePrice: 22700, payoff: 70000, type: 'put'),
+    PayoffData(strikePrice: 22800, payoff: 60000, type: 'put'),
+    PayoffData(strikePrice: 22900, payoff: 50000, type: 'put'),
+    PayoffData(strikePrice: 23000, payoff: 45000, type: 'put'),
+    PayoffData(strikePrice: 23100, payoff: 40000, type: 'put'),
+    PayoffData(strikePrice: 23200, payoff: 35000, type: 'put'),
+    PayoffData(strikePrice: 23300, payoff: 30000, type: 'put'),
+    PayoffData(strikePrice: 23400, payoff: 25000, type: 'put'),
+    PayoffData(strikePrice: 23500, payoff: 22000, type: 'put'),
+    PayoffData(strikePrice: 23600, payoff: 20000, type: 'put'),
+    PayoffData(strikePrice: 23700, payoff: 18000, type: 'put'),
+    PayoffData(strikePrice: 23800, payoff: 16000, type: 'put'),
+    PayoffData(strikePrice: 23900, payoff: 15000, type: 'put'),
+    PayoffData(strikePrice: 24000, payoff: 14000, type: 'put'),
+    PayoffData(strikePrice: 24100, payoff: 13000, type: 'put'),
+    PayoffData(strikePrice: 24200, payoff: 12000, type: 'put'),
+    PayoffData(strikePrice: 24300, payoff: 11000, type: 'put'),
+    PayoffData(strikePrice: 24400, payoff: 10000, type: 'put'),
+    PayoffData(strikePrice: 24500, payoff: 11000, type: 'put'),
+    PayoffData(strikePrice: 24600, payoff: 12000, type: 'put'),
+    PayoffData(strikePrice: 24700, payoff: 13000, type: 'put'),
+    PayoffData(strikePrice: 24800, payoff: 15000, type: 'put'),
+    PayoffData(strikePrice: 24900, payoff: 18000, type: 'put'),
+    PayoffData(strikePrice: 25000, payoff: 22000, type: 'put'),
+    PayoffData(strikePrice: 25100, payoff: 25000, type: 'put'),
+    PayoffData(strikePrice: 25200, payoff: 30000, type: 'put'),
+    PayoffData(strikePrice: 25300, payoff: 35000, type: 'put'),
+    PayoffData(strikePrice: 25400, payoff: 40000, type: 'put'),
+    PayoffData(strikePrice: 25500, payoff: 45000, type: 'put'),
+    PayoffData(strikePrice: 25600, payoff: 50000, type: 'put'),
+    PayoffData(strikePrice: 25700, payoff: 60000, type: 'put'),
+    PayoffData(strikePrice: 25800, payoff: 70000, type: 'put'),
+    PayoffData(strikePrice: 25900, payoff: 85000, type: 'put'),
+    PayoffData(strikePrice: 26000, payoff: 100000, type: 'put'),
+  ];
+
+  final double currentPrice = 25354.15;
+  final double maxPain = 24600.0;
+
   @override
   void initState() {
     super.initState();
@@ -438,27 +538,94 @@ class _ChartDemoAppState extends State<ChartDemoApp>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Chart Library Comparison'),
+        title: Text(
+          _selectedBottomNavIndex == 0 ? 'Bubble Charts' : 'Parabolic Charts',
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.blue.shade700,
-          unselectedLabelColor: Colors.grey.shade600,
-          indicatorColor: Colors.blue.shade700,
-          tabs: [
-            Tab(text: 'Highcharts'),
-            Tab(text: 'FL Chart'),
-            Tab(text: 'Syncfusion'),
-          ],
-        ),
+        bottom: _selectedBottomNavIndex == 0
+            ? TabBar(
+                controller: _tabController,
+                labelColor: Colors.blue.shade700,
+                unselectedLabelColor: Colors.grey.shade600,
+                indicatorColor: Colors.blue.shade700,
+                tabs: [
+                  Tab(text: 'Highcharts'),
+                  Tab(text: 'FL Chart'),
+                  Tab(text: 'Syncfusion'),
+                ],
+              )
+            : TabBar(
+                controller: _tabController,
+                labelColor: Colors.blue.shade700,
+                unselectedLabelColor: Colors.grey.shade600,
+                indicatorColor: Colors.blue.shade700,
+                tabs: [
+                  Tab(text: 'Syncfusion'),
+                  Tab(text: 'Highcharts'),
+                  Tab(text: 'Comparison'),
+                ],
+              ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          highcharts.StockHeatmapChart(stockData: stockData),
-          fl_chart.StockHeatmapChart(stockData: stockData),
-          syncfusion.BubbleChartPage(stockData: stockData),
+      body: _selectedBottomNavIndex == 0
+          ? TabBarView(
+              controller: _tabController,
+              children: [
+                highcharts.StockHeatmapChart(stockData: stockData),
+                fl_chart.StockHeatmapChart(stockData: stockData),
+                syncfusion.BubbleChartPage(stockData: stockData),
+              ],
+            )
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                syncfusion_parabolic.SyncfusionParabolicChart(
+                  payoffData: payoffData,
+                  currentPrice: currentPrice,
+                  maxPain: maxPain,
+                ),
+                highcharts_parabolic.HighchartsParabolicChart(
+                  payoffData: payoffData,
+                  currentPrice: currentPrice,
+                  maxPain: maxPain,
+                ),
+                // Comparison view showing both charts side by side
+                Row(
+                  children: [
+                    Expanded(
+                      child: syncfusion_parabolic.SyncfusionParabolicChart(
+                        payoffData: payoffData,
+                        currentPrice: currentPrice,
+                        maxPain: maxPain,
+                      ),
+                    ),
+                    Expanded(
+                      child: highcharts_parabolic.HighchartsParabolicChart(
+                        payoffData: payoffData,
+                        currentPrice: currentPrice,
+                        maxPain: maxPain,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedBottomNavIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedBottomNavIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bubble_chart),
+            label: 'Bubble Charts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.show_chart),
+            label: 'Parabolic Charts',
+          ),
         ],
       ),
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import '../main.dart';
+import '../../main.dart';
 
 class BubbleChartPage extends StatefulWidget {
   final List<StockData> stockData;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:highcharts_flutter/highcharts.dart';
-import '../main.dart';
+import '../../main.dart';
 
 class StockHeatmapChart extends StatelessWidget {
   final List<StockData> stockData;

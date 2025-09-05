@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:ui' as ui;
-import '../main.dart';
+import '../../main.dart';
 
 class StockHeatmapChart extends StatefulWidget {
   final List<StockData> stockData;
