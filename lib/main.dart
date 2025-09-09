@@ -47,7 +47,13 @@ class StockData {
   String get solidColor {
     switch (quadrant) {
       case 'long_buildup': // Upper right - Dark green
-        return '#1B5E20';
+        return '''   {
+     'radialGradient': {'cx': 0.4, 'cy': 0.3, 'r': 0.7},
+     'stops': [
+       [0, 'rgba(28,2,255,0.5)'],  // White center with 50% opacity
+       [1, 'rgba(4,2,138,0.5)']                  // Quadrant color at edges
+     ]
+   }''';
       case 'long_unwinding': // Upper left - Light green
         return '#4CAF50';
       case 'short_covering': // Lower left - Light orange
