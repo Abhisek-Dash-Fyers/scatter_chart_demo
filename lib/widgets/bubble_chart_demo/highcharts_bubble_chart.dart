@@ -60,6 +60,11 @@ class StockHeatmapChart extends StatelessWidget {
             Expanded(
               child: HighchartsChart(
                 HighchartsOptions(
+                  tooltip: HighchartsTooltipOptions(
+                    useHTML: true,
+                    stickOnContact: true,
+                    hideDelay: 0,
+                  ),
                   chart: HighchartsChartOptions(
                     type: 'bubble',
                     backgroundColor: '#ffffff',
@@ -244,19 +249,20 @@ class StockHeatmapChart extends StatelessWidget {
                           </table>
                         ''',
                       ),
-                      marker: HighchartsBubbleSeriesMarkerOptions(
-                        lineWidth: 2,
-                        lineColor: '#ffffff',
-                        fillOpacity: 0.8,
-                        states: HighchartsBubbleSeriesMarkerStatesOptions(
-                          hover: HighchartsBubbleSeriesMarkerStatesHoverOptions(
-                            enabled: true,
-                            radiusPlus: 5,
-                            lineWidthPlus: 1,
-                            fillColor: null,
-                          ),
-                        ),
-                      ),
+                      // marker: HighchartsBubbleSeriesMarkerOptions(
+                      //   lineWidth: 2,
+                      //   // lineColor: '#ffffff',
+                      //   // fillColor: ,
+                      //   fillOpacity: 0.8,
+                      //   states: HighchartsBubbleSeriesMarkerStatesOptions(
+                      //     hover: HighchartsBubbleSeriesMarkerStatesHoverOptions(
+                      //       enabled: true,
+                      //       radiusPlus: 5,
+                      //       lineWidthPlus: 1,
+                      //       fillColor: null,
+                      //     ),
+                      //   ),
+                      // ),
                     ),
                   ),
 
@@ -271,22 +277,24 @@ class StockHeatmapChart extends StatelessWidget {
                               y: stock.priceChange,
                               z: stock.currentPrice,
                               name: stock.symbol,
-                              color:
-                                  stock.solidColor, // Use solid color for base
+                              color: "#ffffff",
+                              // color:
+                              //     stock.solidColor, // Use solid color for base
                               marker: HighchartsBubbleSeriesDataMarkerOptions(
-                                fillColor: stock
-                                    .solidColor, // Use solid color for marker
-                                lineColor: '#ffffff',
+                                // fillColor:
+                                //     "{'radialGradient': {'cx': 0.4, 'cy': 0.3, 'r': 0.7}, 'stops': [[0, '#801C02FF'], [1, '#8004028A']]}", // Use solid color for marker
+                                // lineColor: '#ffffff',
                                 lineWidth: 2,
-                                states: HighchartsSeriesMarkerStatesOptions(
-                                  hover:
-                                      HighchartsSeriesMarkerStatesHoverOptions(
-                                        fillColor: stock.hoverColor,
-                                        lineColor: '#ffffff',
-                                        lineWidth: 3,
-                                        radiusPlus: 5,
-                                      ),
-                                ),
+
+                                // states: HighchartsSeriesMarkerStatesOptions(
+                                //   hover:
+                                //       HighchartsSeriesMarkerStatesHoverOptions(
+                                //         fillColor: stock.hoverColor,
+                                //         lineColor: '#ffffff',
+                                //         lineWidth: 3,
+                                //         radiusPlus: 5,
+                                //       ),
+                                // ),
                               ),
                             ),
                           )
@@ -355,6 +363,53 @@ class StockHeatmapChart extends StatelessWidget {
                     ),
                   ],
                 ),
+                // Custom JavaScript to apply gradients to bubble markers
+                javaScript: '''
+                  // Wait for chart to be fully loaded
+                  setTimeout(function() {
+                    if (window.highcharts_flutter && window.highcharts_flutter.chart) {
+                      var chart = window.highcharts_flutter.chart;
+                      var series = chart.series[0]; // Main bubble series
+
+                      if (series && series.data) {
+                        series.data.forEach(function(point, index) {
+                          var oiChange = point.x;
+                          var priceChange = point.y;
+                          var baseColor;
+
+                          // Determine color based on quadrant
+                          if (oiChange > 0 && priceChange > 0) {
+                            baseColor = '#22c55e'; // Long buildup - Green
+                          } else if (oiChange < 0 && priceChange > 0) {
+                            baseColor = '#3b82f6'; // Long unwinding - Blue
+                          } else if (oiChange < 0 && priceChange < 0) {
+                            baseColor = '#f97316'; // Short covering - Orange
+                          } else {
+                            baseColor = '#ef4444'; // Short buildup - Red
+                          }
+
+                          // Apply radial gradient
+                          point.update({
+                            marker: {
+                              fillColor: {
+                                radialGradient: { cx: 0.4, cy: 0.3, r: 0.7 },
+                                stops: [
+                                  [0, 'rgba(255,255,255,0.5)'],
+                                  [1, baseColor]
+                                ]
+                              },
+                              lineColor: '#ffffff',
+                              lineWidth: 2
+                            }
+                          }, false);
+                        });
+
+                        // Redraw the chart to apply changes
+                        chart.redraw();
+                      }
+                    }
+                  }, 100);
+                ''',
               ),
             ),
           ],
