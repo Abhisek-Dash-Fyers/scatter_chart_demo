@@ -6,6 +6,10 @@ import 'widgets/parabolic_chart_demo/syncfusion_parabolic_chart.dart'
     as syncfusion_parabolic;
 import 'widgets/parabolic_chart_demo/highcharts_parabolic_chart.dart'
     as highcharts_parabolic;
+import 'widgets/bar_chart_striped_demo/syncfusion_striped_bar_chart.dart'
+    as syncfusion_striped;
+import 'widgets/bar_chart_striped_demo/highcharts_striped_bar_chart.dart'
+    as highcharts_striped;
 
 void main() {
   runApp(MaterialApp(home: ChartDemoApp()));
@@ -493,7 +497,11 @@ class _ChartDemoAppState extends State<ChartDemoApp>
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          _selectedBottomNavIndex == 0 ? 'Bubble Charts' : 'Parabolic Charts',
+          _selectedBottomNavIndex == 0
+              ? 'Bubble Charts'
+              : _selectedBottomNavIndex == 1
+              ? 'Parabolic Charts'
+              : 'Open Interest Charts',
         ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -507,6 +515,18 @@ class _ChartDemoAppState extends State<ChartDemoApp>
                   Tab(text: 'Highcharts'),
                   Tab(text: 'FL Chart'),
                   Tab(text: 'Syncfusion'),
+                ],
+              )
+            : _selectedBottomNavIndex == 1
+            ? TabBar(
+                controller: _tabController,
+                labelColor: Colors.blue.shade700,
+                unselectedLabelColor: Colors.grey.shade600,
+                indicatorColor: Colors.blue.shade700,
+                tabs: [
+                  Tab(text: 'Syncfusion'),
+                  Tab(text: 'Highcharts'),
+                  Tab(text: 'Comparison'),
                 ],
               )
             : TabBar(
@@ -530,7 +550,8 @@ class _ChartDemoAppState extends State<ChartDemoApp>
                 syncfusion.BubbleChartPage(stockData: stockData),
               ],
             )
-          : TabBarView(
+          : _selectedBottomNavIndex == 1
+          ? TabBarView(
               controller: _tabController,
               children: [
                 syncfusion_parabolic.SyncfusionParabolicChart(
@@ -563,6 +584,32 @@ class _ChartDemoAppState extends State<ChartDemoApp>
                   ],
                 ),
               ],
+            )
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                syncfusion_striped.SyncfusionStripedBarChart(
+                  currentPrice: currentPrice,
+                ),
+                highcharts_striped.HighchartsStripedBarChart(
+                  currentPrice: currentPrice,
+                ),
+                // Comparison view showing both charts side by side
+                Row(
+                  children: [
+                    Expanded(
+                      child: syncfusion_striped.SyncfusionStripedBarChart(
+                        currentPrice: currentPrice,
+                      ),
+                    ),
+                    Expanded(
+                      child: highcharts_striped.HighchartsStripedBarChart(
+                        currentPrice: currentPrice,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedBottomNavIndex,
@@ -571,6 +618,7 @@ class _ChartDemoAppState extends State<ChartDemoApp>
             _selectedBottomNavIndex = index;
           });
         },
+        type: BottomNavigationBarType.fixed,
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.bubble_chart),
@@ -579,6 +627,10 @@ class _ChartDemoAppState extends State<ChartDemoApp>
           BottomNavigationBarItem(
             icon: Icon(Icons.show_chart),
             label: 'Parabolic Charts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'Open Interest Charts',
           ),
         ],
       ),

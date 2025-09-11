@@ -144,14 +144,7 @@ class _HighchartsStripedBarChartState extends State<HighchartsStripedBarChart> {
                       gridLineWidth: 1,
                       gridLineColor: '#e0e0e0',
                       lineColor: '#cccccc',
-                      plotLines: [
-                        HighchartsXAxisPlotLinesOptions(
-                          value: widget.currentPrice,
-                          color: '#1976d2',
-                          width: 2,
-                          dashStyle: 'Dash',
-                        ),
-                      ],
+                      // plotLines: [], // Removed current price line
                       labels: HighchartsXAxisLabelsOptions(
                         style: HighchartsXAxisLabelsStyleOptions(
                           fontSize: '10px',
@@ -183,9 +176,13 @@ class _HighchartsStripedBarChartState extends State<HighchartsStripedBarChart> {
                   ],
                   plotOptions: HighchartsPlotOptions(
                     column: HighchartsColumnSeriesOptions(
-                      pointPadding: 0.2, // Space between call and put columns
+                      stacking: 'normal',
+                      pointPadding: 0.02, // Reduced padding for wider columns
+                      groupPadding:
+                          0.05, // Reduced group padding for wider columns
                       borderWidth: 0,
-                      // Remove stacking to allow side-by-side columns
+                      maxPointWidth:
+                          60, // Set maximum column width to match design
                     ),
                   ),
                   tooltip: HighchartsTooltipOptions(
@@ -194,8 +191,23 @@ class _HighchartsStripedBarChartState extends State<HighchartsStripedBarChart> {
                     borderColor: '#cccccc',
                     borderRadius: 8,
                   ),
-                  series: _buildSeries(),
+                  series: _buildSeriesWithPatterns(),
                 ),
+                javaScriptModules: [
+                  'https://code.highcharts.com/highcharts.js',
+                  'https://code.highcharts.com/highcharts-more.js',
+                  'https://code.highcharts.com/highcharts-3d.js',
+                  'https://code.highcharts.com/modules/solid-gauge.js',
+                  'https://code.highcharts.com/modules/annotations.js',
+                  'https://code.highcharts.com/modules/boost.js',
+                  'https://code.highcharts.com/modules/broken-axis.js',
+                  'https://code.highcharts.com/modules/data.js',
+                  'https://code.highcharts.com/modules/exporting.js',
+                  'https://code.highcharts.com/modules/offline-exporting.js',
+                  'https://code.highcharts.com/modules/accessibility.js',
+                  'https://code.highcharts.com/modules/pattern-fill.js',
+                ],
+                javaScript: _buildPatternFillJS(),
               ),
             ),
           ),
@@ -246,38 +258,144 @@ class _HighchartsStripedBarChartState extends State<HighchartsStripedBarChart> {
     );
   }
 
-  List<HighchartsSeries> _buildSeries() {
-    // Generate option chain data that matches the design
+  String _buildPatternFillJS() {
+    // Build JavaScript to modify series colors with pattern fills after chart creation
+    return '''
+      // Wait for chart to be created, then modify series colors with patterns
+      setTimeout(function() {
+        if (window.highcharts_flutter && window.highcharts_flutter.chart) {
+          var chart = window.highcharts_flutter.chart;
+          
+          // Apply pattern fills to Call OI Change series (index 0)
+          var callChangeSeries = chart.series[0];
+          if (callChangeSeries && callChangeSeries.name === 'Call OI Change') {
+            callChangeSeries.data.forEach(function(point, index) {
+              // Check if this point represents a positive OI change
+              if (point.color !== 'transparent' && point.y > 0) {
+                // Apply pattern fill for positive changes only
+                point.update({
+                  color: {
+                    pattern: {
+                      path: {
+                        d: 'M 0 8 L 8 0',
+                        strokeWidth: 2
+                      },
+                      width: 8,
+                      height: 8,
+                      color: '#22C55E'
+                    }
+                  },
+                  borderColor: '#22C55E',
+                  borderWidth: 1
+                }, false);
+              } else if (point.color === 'transparent' && point.y > 0) {
+                // Apply border for negative changes (transparent with border)
+                point.update({
+                  color: 'transparent',
+                  borderColor: '#22C55E',
+                  borderWidth: 1
+                }, false);
+              }
+            });
+          }
+          
+          // Apply pattern fills to Put OI Change series (index 2)
+          var putChangeSeries = chart.series[2];
+          if (putChangeSeries && putChangeSeries.name === 'Put OI Change') {
+            putChangeSeries.data.forEach(function(point, index) {
+              // Check if this point represents a positive OI change
+              if (point.color !== 'transparent' && point.y > 0) {
+                // Apply pattern fill for positive changes only
+                point.update({
+                  color: {
+                    pattern: {
+                      path: {
+                        d: 'M 0 8 L 8 0',
+                        strokeWidth: 2
+                      },
+                      width: 8,
+                      height: 8,
+                      color: '#EF4444'
+                    }
+                  },
+                  borderColor: '#EF4444',
+                  borderWidth: 1
+                }, false);
+              } else if (point.color === 'transparent' && point.y > 0) {
+                // Apply border for negative changes (transparent with border)
+                point.update({
+                  color: 'transparent',
+                  borderColor: '#EF4444',
+                  borderWidth: 1
+                }, false);
+              }
+            });
+          }
+          
+          // Redraw chart with pattern fills
+          chart.redraw();
+        }
+      }, 100);
+    ''';
+  }
+
+  List<HighchartsSeries> _buildSeriesWithPatterns() {
     final optionChainData = _generateOptionChainData();
 
     return [
-      // Call OI (green bars with color variation based on change)
+      // Call OI Change (top portion - will be modified by JS for pattern fills)
       HighchartsColumnSeries(
-        name: 'Call OI',
+        name: 'Call OI Change',
         dataPoints: optionChainData.where((d) => d.type == 'call').map((d) {
           return HighchartsColumnSeriesDataOptions(
             x: d.strikePrice,
-            y: d.openInterest, // Show total OI
-            // Different shades based on positive/negative change
+            y: d.changeAmount,
+            // Initial color - will be replaced by JS pattern for positive changes
             color: d.hasPositiveChange
-                ? '#22C55E' // Light green for positive change
-                : '#16A34A', // Darker green for negative change
+                ? '#22C55E' // Temporary solid color (will be replaced with pattern)
+                : 'transparent', // Transparent for negative (hollow effect)
           );
         }).toList(),
+        options: HighchartsColumnSeriesOptions(stack: 'call'),
       ),
-      // Put OI (red bars with color variation based on change)
+      // Call OI Base (bottom portion - solid green)
       HighchartsColumnSeries(
-        name: 'Put OI',
+        name: 'Call OI Base',
+        dataPoints: optionChainData.where((d) => d.type == 'call').map((d) {
+          return HighchartsColumnSeriesDataOptions(
+            x: d.strikePrice,
+            y: d.baseOI,
+            color: '#22C55E',
+          );
+        }).toList(),
+        options: HighchartsColumnSeriesOptions(stack: 'call'),
+      ),
+      // Put OI Change (top portion - will be modified by JS for pattern fills)
+      HighchartsColumnSeries(
+        name: 'Put OI Change',
         dataPoints: optionChainData.where((d) => d.type == 'put').map((d) {
           return HighchartsColumnSeriesDataOptions(
             x: d.strikePrice,
-            y: d.openInterest, // Show total OI
-            // Different shades based on positive/negative change
+            y: d.changeAmount,
+            // Initial color - will be replaced by JS pattern for positive changes
             color: d.hasPositiveChange
-                ? '#EF4444' // Light red for positive change
-                : '#DC2626', // Darker red for negative change
+                ? '#EF4444' // Temporary solid color (will be replaced with pattern)
+                : 'transparent', // Transparent for negative (hollow effect)
           );
         }).toList(),
+        options: HighchartsColumnSeriesOptions(stack: 'put'),
+      ),
+      // Put OI Base (bottom portion - solid red)
+      HighchartsColumnSeries(
+        name: 'Put OI Base',
+        dataPoints: optionChainData.where((d) => d.type == 'put').map((d) {
+          return HighchartsColumnSeriesDataOptions(
+            x: d.strikePrice,
+            y: d.baseOI,
+            color: '#EF4444',
+          );
+        }).toList(),
+        options: HighchartsColumnSeriesOptions(stack: 'put'),
       ),
     ];
   }
