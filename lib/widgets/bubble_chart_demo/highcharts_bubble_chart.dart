@@ -4,8 +4,15 @@ import '../../main.dart';
 
 class StockHeatmapChart extends StatelessWidget {
   final List<StockData> stockData;
+  final Widget Function(StockData)? customTooltipBuilder;
+  final bool useFlutterWidgetTooltip;
 
-  const StockHeatmapChart({super.key, required this.stockData});
+  const StockHeatmapChart({
+    super.key,
+    required this.stockData,
+    this.customTooltipBuilder,
+    this.useFlutterWidgetTooltip = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -62,8 +69,11 @@ class StockHeatmapChart extends StatelessWidget {
                 HighchartsOptions(
                   tooltip: HighchartsTooltipOptions(
                     useHTML: true,
+                    backgroundColor: 'transparent',
+                    borderWidth: 0,
+                    hideDelay: 500,
+                    distance: 30,
                     stickOnContact: true,
-                    hideDelay: 0,
                   ),
                   chart: HighchartsChartOptions(
                     type: 'bubble',
@@ -169,85 +179,7 @@ class StockHeatmapChart extends StatelessWidget {
                         },
                       ),
                       tooltip: HighchartsBubbleSeriesTooltipOptions(
-                        pointFormat: '''
-                          <table style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 1px solid #e5e7eb; min-width: 280px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; border-collapse: collapse;">
-                            
-                            <!-- Row 1: Company logo + name with price -->
-                            <tr>
-                              <td colspan="2" style="padding-bottom: 16px;">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                  <tr>
-                                    <td style="width: 50px; vertical-align: middle;">
-                                      <div style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 50%; display: inline-block; text-align: center; line-height: 40px; border: 1px solid #e9ecef; font-size: 12px; font-weight: bold; color: #6c757d;">
-                                        {point.name}
-                                      </div>
-                                    </td>
-                                    <td style="vertical-align: middle; padding-left: 12px;">
-                                      <div style="font-weight: 600; font-size: 18px; color: #212529;">
-                                        {point.name} {point.z} <span style="color: #28a745; font-size: 16px;">↗</span>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                </table>
-                              </td>
-                            </tr>
-                            
-                            <!-- Row 2: Price change and OI change side by side -->
-                            <tr>
-                              <td style="width: 50%; padding-right: 20px; padding-bottom: 20px; vertical-align: top;">
-                                <div style="font-size: 14px; color: #6c757d; margin-bottom: 6px; font-weight: 500;">
-                                  Price chg%
-                                </div>
-                                <div style="font-size: 16px; font-weight: 600; color: #212529;">
-                                  {point.y}<span style="color: #28a745;">({point.y}%)</span>
-                                </div>
-                              </td>
-                              <td style="width: 50%; padding-bottom: 20px; vertical-align: top;">
-                                <div style="font-size: 14px; color: #6c757d; margin-bottom: 6px; font-weight: 500;">
-                                  OI chg%
-                                </div>
-                                <div style="font-size: 16px; font-weight: 600; color: #212529;">
-                                  {point.x}L<span style="color: #dc3545;">({point.x}%)</span>
-                                </div>
-                              </td>
-                            </tr>
-                            
-                            <!-- Row 3: 5 Action buttons -->
-                            <tr>
-                              <td colspan="2">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                  <tr>
-                                    <td style="width: 20%; text-align: center;">
-                                      <button style="background: #28a745; color: white; border: none; border-radius: 8px; width: 44px; height: 44px; font-weight: bold; font-size: 16px; cursor: pointer;">
-                                        B
-                                      </button>
-                                    </td>
-                                    <td style="width: 20%; text-align: center;">
-                                      <button style="background: #dc3545; color: white; border: none; border-radius: 8px; width: 44px; height: 44px; font-weight: bold; font-size: 16px; cursor: pointer;">
-                                        S
-                                      </button>
-                                    </td>
-                                    <td style="width: 20%; text-align: center;">
-                                      <button style="background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; font-size: 18px;">
-                                        ⫿
-                                      </button>
-                                    </td>
-                                    <td style="width: 20%; text-align: center;">
-                                      <button style="background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; font-size: 18px;">
-                                        ⊞
-                                      </button>
-                                    </td>
-                                    <td style="width: 20%; text-align: center;">
-                                      <button style="background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; font-size: 18px;">
-                                        📈
-                                      </button>
-                                    </td>
-                                  </tr>
-                                </table>
-                              </td>
-                            </tr>
-                          </table>
-                        ''',
+                        pointFormat: _getTooltipHTML(),
                       ),
                       // marker: HighchartsBubbleSeriesMarkerOptions(
                       //   lineWidth: 2,
@@ -363,32 +295,46 @@ class StockHeatmapChart extends StatelessWidget {
                     ),
                   ],
                 ),
-                // Custom JavaScript to apply gradients to bubble markers
+                // Enhanced JavaScript with tooltip interactions and gradients
                 javaScript: '''
-                  // Wait for chart to be fully loaded
+                  // Global action handler
+                  window.handleAction = function(action, symbol) {
+                    console.log('Action triggered:', action, 'for symbol:', symbol);
+                    
+                    // Prevent tooltip from hiding immediately
+                    if (window.highcharts_flutter && window.highcharts_flutter.chart) {
+                      var chart = window.highcharts_flutter.chart;
+                      var originalHide = chart.tooltip.hide;
+                      chart.tooltip.hide = function() {}; // Temporarily disable hide
+                      
+                      setTimeout(function() {
+                        chart.tooltip.hide = originalHide; // Re-enable after action
+                      }, 100);
+                    }
+                  };
+                  
                   setTimeout(function() {
                     if (window.highcharts_flutter && window.highcharts_flutter.chart) {
                       var chart = window.highcharts_flutter.chart;
-                      var series = chart.series[0]; // Main bubble series
-
+                      var series = chart.series[0];
+                      
+                      // Apply gradients
                       if (series && series.data) {
                         series.data.forEach(function(point, index) {
                           var oiChange = point.x;
                           var priceChange = point.y;
                           var baseColor;
-
-                          // Determine color based on quadrant
+                          
                           if (oiChange > 0 && priceChange > 0) {
-                            baseColor = '#22c55e'; // Long buildup - Green
+                            baseColor = '#22c55e';
                           } else if (oiChange < 0 && priceChange > 0) {
-                            baseColor = '#3b82f6'; // Long unwinding - Blue
+                            baseColor = '#3b82f6';
                           } else if (oiChange < 0 && priceChange < 0) {
-                            baseColor = '#f97316'; // Short covering - Orange
+                            baseColor = '#f97316';
                           } else {
-                            baseColor = '#ef4444'; // Short buildup - Red
+                            baseColor = '#ef4444';
                           }
-
-                          // Apply radial gradient
+                          
                           point.update({
                             marker: {
                               fillColor: {
@@ -403,10 +349,49 @@ class StockHeatmapChart extends StatelessWidget {
                             }
                           }, false);
                         });
-
-                        // Redraw the chart to apply changes
+                        
                         chart.redraw();
                       }
+                      
+                      // Enhanced tooltip positioning
+                      chart.update({
+                        tooltip: {
+                          positioner: function(labelWidth, labelHeight, point) {
+                            var chart = this.chart;
+                            var plotX = point.plotX + chart.plotLeft;
+                            var plotY = point.plotY + chart.plotTop;
+                            
+                            var tooltipX = plotX + 20;
+                            var tooltipY = plotY - labelHeight / 2;
+                            
+                            // Keep tooltip within chart bounds
+                            if (tooltipX + labelWidth > chart.chartWidth) {
+                              tooltipX = plotX - labelWidth - 20;
+                            }
+                            
+                            if (tooltipY < 0) {
+                              tooltipY = 10;
+                            } else if (tooltipY + labelHeight > chart.chartHeight) {
+                              tooltipY = chart.chartHeight - labelHeight - 10;
+                            }
+                            
+                            return { x: tooltipX, y: tooltipY };
+                          }
+                        }
+                      });
+                      
+                      // Prevent tooltip from hiding when hovering over buttons
+                      document.addEventListener('mouseover', function(e) {
+                        if (e.target.classList.contains('action-btn')) {
+                          chart.pointer.reset = function() {};
+                        }
+                      });
+                      
+                      document.addEventListener('mouseout', function(e) {
+                        if (e.target.classList.contains('action-btn')) {
+                          chart.pointer.reset = Highcharts.Pointer.prototype.reset;
+                        }
+                      });
                     }
                   }, 100);
                 ''',
@@ -475,5 +460,803 @@ class StockHeatmapChart extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Generate tooltip HTML based on configuration
+  String _getTooltipHTML() {
+    if (useFlutterWidgetTooltip && customTooltipBuilder != null) {
+      // Use Flutter widget converter (example with first stock)
+      if (stockData.isNotEmpty) {
+        Widget customWidget = customTooltipBuilder!(stockData.first);
+        return FlutterToHtmlConverter.convertWidget(customWidget);
+      }
+    }
+
+    // Default Figma design tooltip
+    return '''
+      <div class="figma-tooltip">
+        <style>
+          .figma-tooltip {
+            display: inline-flex;
+            padding: 8px;
+            align-items: center;
+            gap: 2px;
+            border-radius: 8px;
+            border: 1px solid #DCE3E5;
+            background: #FFF;
+            box-shadow: 0 2px 8px 0 #DCE3E5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-width: 280px;
+            flex-direction: column;
+          }
+          
+          .tooltip-header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 12px;
+          }
+          
+          .company-logo {
+            width: 24px;
+            height: 24px;
+            background: #F0F4F7;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #6B7280;
+          }
+          
+          .company-info {
+            flex: 1;
+          }
+          
+          .company-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+            margin: 0;
+            line-height: 1.2;
+          }
+          
+          .company-price {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+            margin: 2px 0 0 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+          
+          .price-arrow {
+            color: #10B981;
+            font-size: 12px;
+          }
+          
+          .metrics-row {
+            display: flex;
+            width: 100%;
+            gap: 16px;
+            margin-bottom: 12px;
+          }
+          
+          .metric-item {
+            flex: 1;
+          }
+          
+          .metric-label {
+            font-size: 12px;
+            color: #9CA3AF;
+            margin-bottom: 2px;
+            font-weight: 400;
+          }
+          
+          .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+          }
+          
+          .metric-percentage {
+            font-size: 12px;
+            margin-left: 2px;
+          }
+          
+          .positive {
+            color: #10B981;
+          }
+          
+          .negative {
+            color: #EF4444;
+          }
+          
+          .action-buttons {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+          }
+          
+          .action-btn {
+            flex: 1;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid #DCE3E5;
+            background: #FFF;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+          }
+          
+          .btn-buy {
+            background: #10B981;
+            color: white;
+            border-color: #10B981;
+          }
+          
+          .btn-sell {
+            background: #EF4444;
+            color: white;
+            border-color: #EF4444;
+          }
+          
+          .btn-secondary {
+            color: #6B7280;
+          }
+          
+          .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          
+          .btn-buy:hover {
+            background: #059669;
+          }
+          
+          .btn-sell:hover {
+            background: #DC2626;
+          }
+          
+          .btn-secondary:hover {
+            background: #F9FAFB;
+          }
+        </style>
+        
+        <div class="tooltip-header">
+          <div class="company-logo">
+            {point.name}
+          </div>
+          <div class="company-info">
+            <div class="company-name">{point.name}</div>
+            <div class="company-price">
+              {point.z}
+              <span class="price-arrow">↗</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="metrics-row">
+          <div class="metric-item">
+            <div class="metric-label">Price chg%</div>
+            <div class="metric-value">
+              {point.y}<span class="metric-percentage positive">({point.y}%)</span>
+            </div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">OI chg%</div>
+            <div class="metric-value">
+              {point.x}L<span class="metric-percentage negative">({point.x}%)</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="action-buttons">
+          <button class="action-btn btn-buy" onclick="handleAction('buy', '{point.name}'); event.stopPropagation();">B</button>
+          <button class="action-btn btn-sell" onclick="handleAction('sell', '{point.name}'); event.stopPropagation();">S</button>
+          <button class="action-btn btn-secondary" onclick="handleAction('watchlist', '{point.name}'); event.stopPropagation();">⫿</button>
+          <button class="action-btn btn-secondary" onclick="handleAction('add', '{point.name}'); event.stopPropagation();">⊞</button>
+          <button class="action-btn btn-secondary" onclick="handleAction('chart', '{point.name}'); event.stopPropagation();">📈</button>
+        </div>
+      </div>
+    ''';
+  }
+
+  // Flutter Widget to HTML Converter System (for future use)
+  // String _buildTooltipFromWidget(Widget tooltipWidget) {
+  //   return FlutterToHtmlConverter.convertWidget(tooltipWidget);
+  // }
+
+  // Example usage method for custom tooltip (for future use)
+  /*
+  Widget _buildCustomTooltip(StockData stock) {
+    return Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFFDCE3E5)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFDCE3E5),
+            offset: Offset(0, 2),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Color(0xFFF0F4F7),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Center(
+                  child: Text(
+                    stock.symbol,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stock.symbol,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          stock.currentPrice.toString(),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1F2937),
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          '↗',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          // Metrics
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Price chg%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      '${stock.priceChange}(${stock.priceChange}%)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'OI chg%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      '${stock.oiChange}L(${stock.oiChange}%)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    minimumSize: Size(0, 32),
+                  ),
+                  child: Text('B', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFEF4444),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    minimumSize: Size(0, 32),
+                  ),
+                  child: Text('S', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Color(0xFF6B7280),
+                    side: BorderSide(color: Color(0xFFDCE3E5)),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    minimumSize: Size(0, 32),
+                  ),
+                  child: Text('⫿', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Color(0xFF6B7280),
+                    side: BorderSide(color: Color(0xFFDCE3E5)),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    minimumSize: Size(0, 32),
+                  ),
+                  child: Text('⊞', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Color(0xFF6B7280),
+                    side: BorderSide(color: Color(0xFFDCE3E5)),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    minimumSize: Size(0, 32),
+                  ),
+                  child: Text('📈', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  */
+}
+
+// Flutter Widget to HTML Converter
+class FlutterToHtmlConverter {
+  static String convertWidget(Widget widget) {
+    if (widget is Container) {
+      return _convertContainer(widget);
+    } else if (widget is Text) {
+      return _convertText(widget);
+    } else if (widget is Row) {
+      return _convertRow(widget);
+    } else if (widget is Column) {
+      return _convertColumn(widget);
+    } else if (widget is ElevatedButton) {
+      return _convertElevatedButton(widget);
+    } else if (widget is OutlinedButton) {
+      return _convertOutlinedButton(widget);
+    } else if (widget is SizedBox) {
+      return _convertSizedBox(widget);
+    } else if (widget is Expanded) {
+      return _convertExpanded(widget);
+    }
+    return '<div>Unsupported widget: ${widget.runtimeType}</div>';
+  }
+
+  static String _convertContainer(Container container) {
+    String styles = '';
+    String classes = 'flutter-container';
+
+    // Handle padding
+    if (container.padding != null) {
+      if (container.padding is EdgeInsets) {
+        EdgeInsets padding = container.padding as EdgeInsets;
+        styles +=
+            'padding: ${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px;';
+      }
+    }
+
+    // Handle decoration
+    if (container.decoration is BoxDecoration) {
+      BoxDecoration decoration = container.decoration as BoxDecoration;
+
+      if (decoration.color != null) {
+        styles += 'background-color: ${_colorToHex(decoration.color!)};';
+      }
+
+      if (decoration.borderRadius != null &&
+          decoration.borderRadius is BorderRadius) {
+        BorderRadius borderRadius = decoration.borderRadius as BorderRadius;
+        styles += 'border-radius: ${borderRadius.topLeft.x}px;';
+      }
+
+      if (decoration.border != null && decoration.border is Border) {
+        Border border = decoration.border as Border;
+        if (border.top.width > 0) {
+          styles +=
+              'border: ${border.top.width}px solid ${_colorToHex(border.top.color)};';
+        }
+      }
+
+      if (decoration.boxShadow != null && decoration.boxShadow!.isNotEmpty) {
+        BoxShadow shadow = decoration.boxShadow!.first;
+        styles +=
+            'box-shadow: ${shadow.offset.dx}px ${shadow.offset.dy}px ${shadow.blurRadius}px ${_colorToHex(shadow.color)};';
+      }
+    }
+
+    // Handle width and height
+    if (container.constraints != null) {
+      if (container.constraints!.maxWidth != double.infinity) {
+        styles += 'max-width: ${container.constraints!.maxWidth}px;';
+      }
+      if (container.constraints!.maxHeight != double.infinity) {
+        styles += 'max-height: ${container.constraints!.maxHeight}px;';
+      }
+    }
+
+    String childHtml = '';
+    if (container.child != null) {
+      childHtml = convertWidget(container.child!);
+    }
+
+    return '<div class="$classes" style="$styles">$childHtml</div>';
+  }
+
+  static String _convertText(Text text) {
+    String styles = '';
+
+    if (text.style != null) {
+      if (text.style!.fontSize != null) {
+        styles += 'font-size: ${text.style!.fontSize}px;';
+      }
+      if (text.style!.color != null) {
+        styles += 'color: ${_colorToHex(text.style!.color!)};';
+      }
+      if (text.style!.fontWeight != null) {
+        int weight = _fontWeightToNumber(text.style!.fontWeight!);
+        styles += 'font-weight: $weight;';
+      }
+    }
+
+    return '<span style="$styles">${text.data ?? ''}</span>';
+  }
+
+  static String _convertRow(Row row) {
+    String styles = 'display: flex; flex-direction: row;';
+
+    // Handle mainAxisAlignment
+    switch (row.mainAxisAlignment) {
+      case MainAxisAlignment.center:
+        styles += 'justify-content: center;';
+        break;
+      case MainAxisAlignment.spaceBetween:
+        styles += 'justify-content: space-between;';
+        break;
+      case MainAxisAlignment.spaceAround:
+        styles += 'justify-content: space-around;';
+        break;
+      case MainAxisAlignment.spaceEvenly:
+        styles += 'justify-content: space-evenly;';
+        break;
+      case MainAxisAlignment.end:
+        styles += 'justify-content: flex-end;';
+        break;
+      default:
+        styles += 'justify-content: flex-start;';
+    }
+
+    // Handle crossAxisAlignment
+    switch (row.crossAxisAlignment) {
+      case CrossAxisAlignment.center:
+        styles += 'align-items: center;';
+        break;
+      case CrossAxisAlignment.start:
+        styles += 'align-items: flex-start;';
+        break;
+      case CrossAxisAlignment.end:
+        styles += 'align-items: flex-end;';
+        break;
+      case CrossAxisAlignment.stretch:
+        styles += 'align-items: stretch;';
+        break;
+      default:
+        styles += 'align-items: flex-start;';
+    }
+
+    String childrenHtml = '';
+    for (Widget child in row.children) {
+      childrenHtml += convertWidget(child);
+    }
+
+    return '<div style="$styles">$childrenHtml</div>';
+  }
+
+  static String _convertColumn(Column column) {
+    String styles = 'display: flex; flex-direction: column;';
+
+    // Handle mainAxisAlignment
+    switch (column.mainAxisAlignment) {
+      case MainAxisAlignment.center:
+        styles += 'justify-content: center;';
+        break;
+      case MainAxisAlignment.spaceBetween:
+        styles += 'justify-content: space-between;';
+        break;
+      case MainAxisAlignment.spaceAround:
+        styles += 'justify-content: space-around;';
+        break;
+      case MainAxisAlignment.spaceEvenly:
+        styles += 'justify-content: space-evenly;';
+        break;
+      case MainAxisAlignment.end:
+        styles += 'justify-content: flex-end;';
+        break;
+      default:
+        styles += 'justify-content: flex-start;';
+    }
+
+    // Handle crossAxisAlignment
+    switch (column.crossAxisAlignment) {
+      case CrossAxisAlignment.center:
+        styles += 'align-items: center;';
+        break;
+      case CrossAxisAlignment.start:
+        styles += 'align-items: flex-start;';
+        break;
+      case CrossAxisAlignment.end:
+        styles += 'align-items: flex-end;';
+        break;
+      case CrossAxisAlignment.stretch:
+        styles += 'align-items: stretch;';
+        break;
+      default:
+        styles += 'align-items: flex-start;';
+    }
+
+    // Handle mainAxisSize
+    if (column.mainAxisSize == MainAxisSize.min) {
+      styles += 'align-self: flex-start;';
+    }
+
+    String childrenHtml = '';
+    for (Widget child in column.children) {
+      childrenHtml += convertWidget(child);
+    }
+
+    return '<div style="$styles">$childrenHtml</div>';
+  }
+
+  static String _convertElevatedButton(ElevatedButton button) {
+    String styles =
+        'border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;';
+    String classes = 'flutter-elevated-button';
+
+    if (button.style != null) {
+      // Handle background color
+      if (button.style!.backgroundColor != null) {
+        Color? bgColor = button.style!.backgroundColor!.resolve({});
+        if (bgColor != null) {
+          styles += 'background-color: ${_colorToHex(bgColor)};';
+        }
+      }
+
+      // Handle foreground color
+      if (button.style!.foregroundColor != null) {
+        Color? fgColor = button.style!.foregroundColor!.resolve({});
+        if (fgColor != null) {
+          styles += 'color: ${_colorToHex(fgColor)};';
+        }
+      }
+
+      // Handle shape
+      if (button.style!.shape != null) {
+        OutlinedBorder? shape = button.style!.shape!.resolve({});
+        if (shape is RoundedRectangleBorder) {
+          styles +=
+              'border-radius: ${shape.borderRadius.resolve(TextDirection.ltr).topLeft.x}px;';
+        }
+      }
+
+      // Handle minimum size
+      if (button.style!.minimumSize != null) {
+        Size? minSize = button.style!.minimumSize!.resolve({});
+        if (minSize != null) {
+          if (minSize.width > 0) styles += 'min-width: ${minSize.width}px;';
+          if (minSize.height > 0) styles += 'min-height: ${minSize.height}px;';
+        }
+      }
+    }
+
+    String childHtml = '';
+    if (button.child != null) {
+      childHtml = convertWidget(button.child!);
+    }
+
+    return '<button class="$classes" style="$styles" onclick="handleButtonClick(\"elevated\");">$childHtml</button>';
+  }
+
+  static String _convertOutlinedButton(OutlinedButton button) {
+    String styles =
+        'background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;';
+    String classes = 'flutter-outlined-button';
+
+    if (button.style != null) {
+      // Handle foreground color
+      if (button.style!.foregroundColor != null) {
+        Color? fgColor = button.style!.foregroundColor!.resolve({});
+        if (fgColor != null) {
+          styles += 'color: ${_colorToHex(fgColor)};';
+        }
+      }
+
+      // Handle side (border)
+      if (button.style!.side != null) {
+        BorderSide? side = button.style!.side!.resolve({});
+        if (side != null) {
+          styles += 'border: ${side.width}px solid ${_colorToHex(side.color)};';
+        }
+      }
+
+      // Handle shape
+      if (button.style!.shape != null) {
+        OutlinedBorder? shape = button.style!.shape!.resolve({});
+        if (shape is RoundedRectangleBorder) {
+          styles +=
+              'border-radius: ${shape.borderRadius.resolve(TextDirection.ltr).topLeft.x}px;';
+        }
+      }
+
+      // Handle minimum size
+      if (button.style!.minimumSize != null) {
+        Size? minSize = button.style!.minimumSize!.resolve({});
+        if (minSize != null) {
+          if (minSize.width > 0) styles += 'min-width: ${minSize.width}px;';
+          if (minSize.height > 0) styles += 'min-height: ${minSize.height}px;';
+        }
+      }
+    }
+
+    String childHtml = '';
+    if (button.child != null) {
+      childHtml = convertWidget(button.child!);
+    }
+
+    return '<button class="$classes" style="$styles" onclick="handleButtonClick(\"outlined\");">$childHtml</button>';
+  }
+
+  static String _convertSizedBox(SizedBox sizedBox) {
+    String styles = '';
+
+    if (sizedBox.width != null) {
+      styles += 'width: ${sizedBox.width}px;';
+    }
+    if (sizedBox.height != null) {
+      styles += 'height: ${sizedBox.height}px;';
+    }
+
+    String childHtml = '';
+    if (sizedBox.child != null) {
+      childHtml = convertWidget(sizedBox.child!);
+    }
+
+    return '<div style="$styles">$childHtml</div>';
+  }
+
+  static String _convertExpanded(Expanded expanded) {
+    String styles = 'flex: ${expanded.flex};';
+
+    String childHtml = '';
+    childHtml = convertWidget(expanded.child);
+
+    return '<div style="$styles">$childHtml</div>';
+  }
+
+  static String _colorToHex(Color color) {
+    return '#${color.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+  }
+
+  static int _fontWeightToNumber(FontWeight fontWeight) {
+    switch (fontWeight) {
+      case FontWeight.w100:
+        return 100;
+      case FontWeight.w200:
+        return 200;
+      case FontWeight.w300:
+        return 300;
+      case FontWeight.w400:
+        return 400;
+      case FontWeight.w500:
+        return 500;
+      case FontWeight.w600:
+        return 600;
+      case FontWeight.w700:
+        return 700;
+      case FontWeight.w800:
+        return 800;
+      case FontWeight.w900:
+        return 900;
+      default:
+        return 400;
+    }
   }
 }

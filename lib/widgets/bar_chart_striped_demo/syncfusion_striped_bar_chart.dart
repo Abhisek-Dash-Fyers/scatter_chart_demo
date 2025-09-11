@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -15,10 +16,45 @@ class OptionData {
     required this.type,
   });
 
-  // Helper properties for stacked visualization
+  // Helper properties for visualization
   double get baseOI => openInterest - oiChange.abs();
   double get changeAmount => oiChange.abs();
   bool get hasPositiveChange => oiChange > 0;
+  double get changePercent => changeAmount / openInterest;
+}
+
+// Custom shader for diagonal stripes using dart:ui
+class StripeShader {
+  static Shader createDiagonalStripeShader(Rect bounds, Color baseColor) {
+    // Create a more sophisticated diagonal stripe pattern
+    return ui.Gradient.linear(
+      bounds.topLeft,
+      bounds.bottomRight,
+      [
+        baseColor,
+        Colors.white.withOpacity(0.4),
+        baseColor,
+        Colors.white.withOpacity(0.4),
+        baseColor,
+        Colors.white.withOpacity(0.4),
+        baseColor,
+        Colors.white.withOpacity(0.4),
+      ],
+      [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875],
+      TileMode.repeated,
+    );
+  }
+
+  // Create a solid color shader for negative changes
+  static Shader createSolidShader(Rect bounds, Color color) {
+    return ui.Gradient.linear(
+      bounds.topLeft,
+      bounds.bottomRight,
+      [color, color],
+      [0.0, 1.0],
+      TileMode.clamp,
+    );
+  }
 }
 
 class SyncfusionStripedBarChart extends StatefulWidget {
@@ -146,15 +182,6 @@ class _SyncfusionStripedBarChartState extends State<SyncfusionStripedBarChart> {
                       fontSize: 10,
                       color: Colors.grey.shade600,
                     ),
-                    plotBands: [
-                      PlotBand(
-                        start: widget.currentPrice,
-                        end: widget.currentPrice,
-                        borderColor: Colors.blue,
-                        borderWidth: 2,
-                        dashArray: [5, 5],
-                      ),
-                    ],
                   ),
                   primaryYAxis: NumericAxis(
                     title: AxisTitle(
@@ -232,7 +259,7 @@ class _SyncfusionStripedBarChartState extends State<SyncfusionStripedBarChart> {
     final optionChainData = _generateOptionChainData();
 
     return [
-      // Call OI Base (solid green)
+      // Call OI Base (solid green bottom portion)
       StackedColumnSeries<OptionData, double>(
         name: 'Call OI Base',
         dataSource: optionChainData.where((d) => d.type == 'call').toList(),
@@ -243,21 +270,45 @@ class _SyncfusionStripedBarChartState extends State<SyncfusionStripedBarChart> {
         spacing: 0.05,
         groupName: 'call',
       ),
-      // Call OI Change (different shade for change portion)
+      // Call OI Change (top portion with diagonal stripe shader)
       StackedColumnSeries<OptionData, double>(
         name: 'Call OI Change',
         dataSource: optionChainData.where((d) => d.type == 'call').toList(),
         xValueMapper: (OptionData data, _) => data.strikePrice,
         yValueMapper: (OptionData data, _) => data.changeAmount,
-        // Different color based on positive/negative change
-        pointColorMapper: (OptionData data, _) => data.hasPositiveChange
-            ? Color(0xFF16A34A) // Darker green for positive change
-            : Color(0xFF15803D), // Even darker green for negative change
         width: 0.7,
         spacing: 0.05,
         groupName: 'call',
+        // Conditional coloring and shader for the top portion
+        pointColorMapper: (OptionData data, _) {
+          if (data.hasPositiveChange) {
+            return Color(0xFF22C55E); // Base color for positive changes
+          } else {
+            return Colors.transparent; // Transparent for negative changes
+          }
+        },
+        // Apply diagonal stripe pattern using gradient
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF22C55E),
+            Colors.white.withOpacity(0.4),
+            Color(0xFF22C55E),
+            Colors.white.withOpacity(0.4),
+            Color(0xFF22C55E),
+            Colors.white.withOpacity(0.4),
+            Color(0xFF22C55E),
+            Colors.white.withOpacity(0.4),
+          ],
+          stops: [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          tileMode: TileMode.repeated,
+        ),
+        // Border for all changes
+        borderColor: Color(0xFF22C55E),
+        borderWidth: 1,
       ),
-      // Put OI Base (solid red)
+      // Put OI Base (solid red bottom portion)
       StackedColumnSeries<OptionData, double>(
         name: 'Put OI Base',
         dataSource: optionChainData.where((d) => d.type == 'put').toList(),
@@ -268,19 +319,43 @@ class _SyncfusionStripedBarChartState extends State<SyncfusionStripedBarChart> {
         spacing: 0.05,
         groupName: 'put',
       ),
-      // Put OI Change (different shade for change portion)
+      // Put OI Change (top portion with diagonal stripe shader)
       StackedColumnSeries<OptionData, double>(
         name: 'Put OI Change',
         dataSource: optionChainData.where((d) => d.type == 'put').toList(),
         xValueMapper: (OptionData data, _) => data.strikePrice,
         yValueMapper: (OptionData data, _) => data.changeAmount,
-        // Different color based on positive/negative change
-        pointColorMapper: (OptionData data, _) => data.hasPositiveChange
-            ? Color(0xFFDC2626) // Darker red for positive change
-            : Color(0xFFB91C1C), // Even darker red for negative change
         width: 0.7,
         spacing: 0.05,
         groupName: 'put',
+        // Conditional coloring and shader for the top portion
+        pointColorMapper: (OptionData data, _) {
+          if (data.hasPositiveChange) {
+            return Color(0xFFEF4444); // Base color for positive changes
+          } else {
+            return Colors.transparent; // Transparent for negative changes
+          }
+        },
+        // Apply diagonal stripe pattern using gradient
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFFEF4444),
+            Colors.white.withOpacity(0.4),
+            Color(0xFFEF4444),
+            Colors.white.withOpacity(0.4),
+            Color(0xFFEF4444),
+            Colors.white.withOpacity(0.4),
+            Color(0xFFEF4444),
+            Colors.white.withOpacity(0.4),
+          ],
+          stops: [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          tileMode: TileMode.repeated,
+        ),
+        // Border for all changes
+        borderColor: Color(0xFFEF4444),
+        borderWidth: 1,
       ),
     ];
   }

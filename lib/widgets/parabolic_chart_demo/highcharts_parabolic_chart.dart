@@ -246,70 +246,72 @@ class _HighchartsParabolicChartState extends State<HighchartsParabolicChart> {
     // Combine all data and start from bottom (no negative values)
     final allData = [...widget.payoffData];
 
-    // Generate parabolic curve data
-    final parabolicData = _generateParabolicData();
-
     return [
-      // Bars cut at parabolic curve height - simpler approach
+      // Column bars at full height (will be visually cut by overlay)
       HighchartsColumnSeries(
-        name: 'Options',
-        dataPoints: allData.map((d) {
-          // Get the parabolic curve value at this strike price
-          double parabolicValue = _getParabolicValueAtX(
-            d.strikePrice,
-            parabolicData,
-          );
-
-          // Cut the bar at parabolic curve height
-          double barHeight = d.payoff > parabolicValue
-              ? parabolicValue
-              : d.payoff;
-
-          // Color based on type
-          String color = d.type == 'call' ? '#22C55E' : '#EF4444';
-
+        name: 'Call Options',
+        dataPoints: allData.where((d) => d.type == 'call').map((d) {
           return HighchartsColumnSeriesDataOptions(
             x: d.strikePrice,
-            y: barHeight, // Bar cut at parabolic curve height
-            color: color,
+            y: d.payoff, // Use full original height
+            color: '#22C55E',
           );
         }).toList(),
+      ),
+      HighchartsColumnSeries(
+        name: 'Put Options',
+        dataPoints: allData.where((d) => d.type == 'put').map((d) {
+          return HighchartsColumnSeriesDataOptions(
+            x: d.strikePrice,
+            y: d.payoff, // Use full original height
+            color: '#EF4444',
+          );
+        }).toList(),
+      ),
+      // Parabolic line that goes exactly through the column data points
+      HighchartsLineSeries(
+        name: 'Parabolic Cut Line',
+        dataPoints: _buildLineDataPoints(),
+        options: HighchartsLineSeriesOptions(
+          color:
+              'rgba(255, 255, 255, 0.8)', // Semi-transparent white for cutting effect
+          lineWidth: 4, // Thick line to create cutting appearance
+          enableMouseTracking: false, // Disable hover/tooltip
+          showInLegend: false, // Hide from legend
+          zIndex: 10, // Render above columns
+        ),
       ),
     ];
   }
 
-  List<PayoffData> _generateParabolicData() {
-    List<PayoffData> parabolicData = [];
+  List<HighchartsLineSeriesDataOptions> _buildLineDataPoints() {
+    // Use the exact same data points as the columns to ensure the line touches the tops
+    final allData = [...widget.payoffData];
 
-    // Generate parabolic curve data points that match the bar data
-    for (double strike = 22400; strike <= 26000; strike += 25) {
-      // Create a parabolic shape with minimum at max pain point
-      double distance = (strike - widget.maxPain).abs();
-      double minValue = 5000;
-      double a = 0.015; // Same formula as main data
-      double payoff = (a * distance * distance) + minValue;
+    // Create a map to store the maximum payoff at each strike price
+    Map<double, double> maxPayoffAtStrike = {};
 
-      parabolicData.add(
-        PayoffData(strikePrice: strike, payoff: payoff, type: 'curve'),
-      );
-    }
-
-    return parabolicData;
-  }
-
-  double _getParabolicValueAtX(double x, List<PayoffData> parabolicData) {
-    // Find the closest parabolic data point
-    PayoffData? closest;
-    double minDistance = double.infinity;
-
-    for (PayoffData data in parabolicData) {
-      double distance = (data.strikePrice - x).abs();
-      if (distance < minDistance) {
-        minDistance = distance;
-        closest = data;
+    // Find the maximum payoff at each strike (considering both call and put)
+    for (PayoffData data in allData) {
+      if (!maxPayoffAtStrike.containsKey(data.strikePrice) ||
+          maxPayoffAtStrike[data.strikePrice]! < data.payoff) {
+        maxPayoffAtStrike[data.strikePrice] = data.payoff;
       }
     }
 
-    return closest?.payoff ?? 20000;
+    // Convert to line data points, sorted by strike price
+    List<HighchartsLineSeriesDataOptions> linePoints = [];
+    List<double> sortedStrikes = maxPayoffAtStrike.keys.toList()..sort();
+
+    for (double strike in sortedStrikes) {
+      linePoints.add(
+        HighchartsLineSeriesDataOptions(
+          x: strike,
+          y: maxPayoffAtStrike[strike]!,
+        ),
+      );
+    }
+
+    return linePoints;
   }
 }
